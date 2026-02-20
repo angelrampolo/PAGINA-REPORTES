@@ -183,7 +183,7 @@ body::before{content:'';position:fixed;inset:0;background:
     <div id="provBreakdown"></div>
   </div>
   <div class="sec hid" id="prodSection">
-    <div class="sec-t"><span class="dot d-pu"></span> Productos más Solicitados</div>
+    <div class="sec-t"><span class="dot d-pu"></span> Productos — % de Confirmación por Producto</div>
     <div id="prodBreakdown"></div>
   </div>
 
@@ -300,7 +300,11 @@ function buildReportDia(){
     const pv=String(fv(r,['PROVINCIA'])||'').trim();
     if(pv)provs[pv]=(provs[pv]||0)+1;
     const pd=String(fv(r,['PRODUCTO'])||'').trim();
-    if(pd&&pd!=='#N/A'&&pd!=='')prods[pd]=(prods[pd]||0)+1;
+    if(pd&&pd!=='#N/A'&&pd!==''){
+      if(!prods[pd])prods[pd]={total:0,conf:0};
+      prods[pd].total++;
+      if(est==='CONFIRMADO')prods[pd].conf++;
+    }
   });
 
   const total=json.filter(r=>String(fv(r,['ESTADO'])||'').trim()).length;
@@ -314,7 +318,7 @@ function buildReportDia(){
   renderBk('obsBreakdown',obsMap,total,'var(--red)');
   renderBk('dropiBreakdown',dropi,sum(dropi),'var(--acc)');
   renderBk('provBreakdown',provs,total,'var(--grn)');
-  renderBk('prodBreakdown',prods,sum(prods),'var(--pur)');
+  renderProds('prodBreakdown',prods);
   ['dashSection','pendSection','califSection','obsSection','dropiSection','provSection','prodSection','btnGen'].forEach(show);
 }
 
@@ -340,6 +344,21 @@ function renderBk(id,dataMap,totalRef,color){
       <div class="bk-bar"><div class="bk-bar-fill" style="width:${pct}%;background:${color}"></div></div>
       <span class="bk-val" style="color:${color}">${count}</span>
       <span class="bk-pct">${pct.toFixed(1)}%</span>
+    </div>`}).join('')+'</div>';
+}
+
+function renderProds(id,prodsMap){
+  const el=$(id);
+  const sorted=Object.entries(prodsMap).sort((a,b)=>b[1].total-a[1].total);
+  if(!sorted.length){el.innerHTML='<div style="color:var(--mute);font-size:12px;padding:8px">Sin datos</div>';return}
+  el.innerHTML='<div class="bk-grid">'+sorted.map(([label,d])=>{
+    const pct=d.total>0?(d.conf/d.total*100):0;
+    const barColor=pct>=70?'var(--grn)':pct>=40?'var(--org)':'var(--red)';
+    return `<div class="bk-item">
+      <span class="bk-lab">${esc(label)}</span>
+      <div class="bk-bar"><div class="bk-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <span class="bk-val" style="color:var(--pur)">${d.conf}/${d.total}</span>
+      <span class="bk-pct" style="color:${barColor}">${pct.toFixed(1)}%</span>
     </div>`}).join('')+'</div>';
 }
 
@@ -456,8 +475,8 @@ function generarPDF(){
       pdfTable(pdf,report.provs,report.total,cGrn);
     }
     if(report.prods&&Object.keys(report.prods).length){
-      secTitle(pdf,'PRODUCTOS MÁS SOLICITADOS',cPur);
-      pdfTable(pdf,report.prods,sum(report.prods),cPur);
+      secTitle(pdf,'PRODUCTOS — % DE CONFIRMACIÓN POR PRODUCTO',cPur);
+      pdfTableProds(pdf,report.prods,cPur);
     }
   }
 
@@ -556,6 +575,39 @@ function generarPDF(){
 
   function bld(p,t,x,yy){p.setFont('helvetica','bold');p.setFontSize(9);p.setTextColor(40,50,65);p.text(t,x,yy)}
   function nrm(p,t,x,yy){p.setFont('helvetica','normal');p.setFontSize(9);p.setTextColor(60,70,80);p.text(t||'—',x,yy)}
+
+  function pdfTableProds(p,prodsMap,rgb){
+    const sorted=Object.entries(prodsMap).sort((a,b)=>b[1].total-a[1].total);
+    if(!sorted.length){p.setTextColor(140);p.setFontSize(9);p.text('Sin datos',M+4,y);y+=8;return}
+
+    p.setFillColor(20,26,34);p.rect(M,y,W-2*M,8,'F');
+    p.setTextColor(200);p.setFontSize(7.5);p.setFont('helvetica','bold');
+    p.text('PRODUCTO',M+3,y+5.5);
+    p.text('CONF/TOTAL',W-M-55,y+5.5);
+    p.text('% CONFIRMACIÓN',W-M-32,y+5.5);y+=8;
+
+    sorted.forEach(([label,d],i)=>{
+      chk(8);
+      const pct=d.total>0?(d.conf/d.total*100):0;
+      const cBar=pct>=70?cGrn:pct>=40?cOrg:cRed;
+      if(i%2===0){p.setFillColor(245,246,248);p.rect(M,y,W-2*M,7.5,'F')}
+      p.setTextColor(60,70,80);p.setFont('helvetica','normal');p.setFontSize(8);
+      const dl=label.length>45?label.substring(0,45)+'...':label;
+      p.text(dl,M+3,y+5.2);
+
+      p.setFont('helvetica','bold');p.setTextColor(rgb[0],rgb[1],rgb[2]);
+      p.text(d.conf+'/'+d.total,W-M-53,y+5.2);
+
+      const bW=22,bX=W-M-30;
+      p.setFillColor(230,232,235);p.rect(bX,y+1.5,bW,3.5,'F');
+      p.setFillColor(cBar[0],cBar[1],cBar[2]);p.rect(bX,y+1.5,bW*(pct/100),3.5,'F');
+
+      p.setTextColor(cBar[0],cBar[1],cBar[2]);p.setFont('helvetica','bold');p.setFontSize(7);
+      p.text(pct.toFixed(1)+'%',bX+bW+2,y+5);
+      y+=7.5;
+    });
+    y+=5;
+  }
 }
 
 // ========== UTILS ==========
