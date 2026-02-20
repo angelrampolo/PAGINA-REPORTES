@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Reportes | Importadora Bella</title>
+
+<!-- SheetJS for Excel reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- jsPDF for PDF generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Chart.js for graphs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --c-bg: #0D1117;
+    --c-surface: #161B22;
+    --c-surface2: #1C2333;
+    --c-border: #30363D;
+    --c-border-light: #3D4450;
+    --c-accent: #58A6FF;
+    --c-accent-dim: #1F6FEB;
+    --c-green: #3FB950;
+    --c-green-dim: rgba(63,185,80,0.15);
+    --c-red: #F85149;
+    --c-red-dim: rgba(248,81,73,0.15);
+    --c-orange: #D29922;
+    --c-orange-dim: rgba(210,153,34,0.15);
+    --c-purple: #BC8CFF;
+    --c-purple-dim: rgba(188,140,255,0.15);
+    --c-text: #E6EDF3;
+    --c-text-dim: #8B949E;
+    --c-text-muted: #484F58;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--c-bg);
+    color: var(--c-text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === ANIMATED BG === */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 20% 50%, rgba(31,111,235,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(63,185,80,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(188,140,255,0.03) 0%, transparent 50%);
+    animation: bgShift 20s ease-in-out infinite alternate;
+    z-index: 0;
+    pointer-events: none;
+  }
+  @keyframes bgShift {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-5%, 3%) rotate(3deg); }
+  }
+
+  /* === LAYOUT === */
+  .app-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* === HEADER === */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0 28px;
+    border-bottom: 1px solid var(--c-border);
+    margin-bottom: 32px;
+  }
+  .app-header .brand {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .brand-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, var(--c-accent), var(--c-purple));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; color: #fff;
+    box-shadow: 0 4px 20px rgba(88,166,255,0.25);
+  }
+  .brand-text h1 {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.3px;
+  }
+  .brand-text span {
+    font-size: 12px; color: var(--c-text-dim); font-weight: 300;
+  }
+  .header-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 12px;
+    border: 1px solid var(--c-border);
+    border-radius: 20px;
+    color: var(--c-text-dim);
+  }
+
+  /* === UPLOAD ZONE === */
+  .upload-zone {
+    border: 2px dashed var(--c-border);
+    border-radius: var(--radius);
+    padding: 48px 24px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    background: var(--c-surface);
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--c-accent);
+    background: rgba(88,166,255,0.04);
+  }
+  .upload-zone.loaded {
+    border-color: var(--c-green);
+    border-style: solid;
+    background: var(--c-green-dim);
+  }
+  .upload-zone .icon {
+    font-size: 40px; margin-bottom: 12px; display: block;
+  }
+  .upload-zone h3 {
+    font-size: 16px; margin-bottom: 6px; font-weight: 500;
+  }
+  .upload-zone p {
+    font-size: 13px; color: var(--c-text-dim);
+  }
+  .upload-zone input { display: none; }
+  .upload-zone .file-name {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--c-green);
+    margin-top: 8px;
+  }
+
+  /* === CARDS / SECTIONS === */
+  .section {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 20px;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+  .section.visible { opacity: 1; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--c-text-dim);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-blue { background: var(--c-accent); }
+  .dot-green { background: var(--c-green); }
+  .dot-orange { background: var(--c-orange); }
+  .dot-purple { background: var(--c-purple); }
+  .dot-red { background: var(--c-red); }
+
+  /* === FORM ELEMENTS === */
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .form-group {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .form-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--c-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .form-group select,
+  .form-group input,
+  .form-group textarea {
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 14px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    color: var(--c-text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group select:focus,
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px rgba(88,166,255,0.1);
+  }
+  .form-group textarea {
+    resize: vertical; min-height: 80px;
+  }
+
+  /* === STATS GRID === */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.green::before { background: var(--c-green); }
+  .stat-card.red::before { background: var(--c-red); }
+  .stat-card.orange::before { background: var(--c-orange); }
+  .stat-card.purple::before { background: var(--c-purple); }
+  .stat-card .stat-value {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-card.green .stat-value { color: var(--c-green); }
+  .stat-card.red .stat-value { color: var(--c-red); }
+  .stat-card.orange .stat-value { color: var(--c-orange); }
+  .stat-card.purple .stat-value { color: var(--c-purple); }
+  .stat-card .stat-label {
+    font-size: 11px;
+    color: var(--c-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 500;
+  }
+
+  /* === EFFECTIVENESS BAR === */
+  .effectiveness-bar {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .eff-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--c-text-dim);
+    white-space: nowrap;
+  }
+  .eff-track {
+    flex: 1;
+    height: 10px;
+    background: var(--c-surface2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .eff-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--c-accent), var(--c-green));
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 0%;
+  }
+  .eff-value {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--c-green);
+    min-width: 70px;
+    text-align: right;
+  }
+
+  /* === PENDIENTES BREAKDOWN === */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .breakdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+  }
+  .breakdown-item .bi-label {
+    color: var(--c-text-dim);
+    font-size: 12px;
+  }
+  .breakdown-item .bi-count {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--c-orange);
+  }
+
+  /* === CHARTS === */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .chart-box {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    position: relative;
+    height: 280px;
+  }
+  .chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* === DETAIL TABLE === */
+  .detail-table-wrapper {
+    max-height: 350px;
+    overflow-y: auto;
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    margin-top: 16px;
+  }
+  .detail-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+  .detail-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--c-border-light);
+    border-radius: 3px;
+  }
+  .detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .detail-table thead {
+    position: sticky; top: 0; z-index: 2;
+  }
+  .detail-table th {
+    background: var(--c-surface2);
+    color: var(--c-text-dim);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--c-border);
+  }
+  .detail-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--c-border);
+    color: var(--c-text);
+  }
+  .detail-table tr:hover td {
+    background: rgba(88,166,255,0.04);
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .badge-confirmado { background: var(--c-green-dim); color: var(--c-green); }
+  .badge-pendiente { background: var(--c-orange-dim); color: var(--c-orange); }
+  .badge-cancelado { background: var(--c-red-dim); color: var(--c-red); }
+  .badge-reagendado { background: var(--c-purple-dim); color: var(--c-purple); }
+
+  /* === GENERATE BTN === */
+  .btn-generate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+    margin-top: 24px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--c-accent-dim), var(--c-accent));
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 24px rgba(88,166,255,0.2);
+  }
+  .btn-generate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(88,166,255,0.35);
+  }
+  .btn-generate:active { transform: translateY(0); }
+  .btn-generate:disabled {
+    opacity: 0.4; cursor: not-allowed; transform: none;
+    box-shadow: none;
+  }
+
+  /* === TOAST === */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 14px 24px;
+    background: var(--c-green);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: var(--c-red); }
+
+  /* === HIDDEN === */
+  .hidden { display: none !important; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .app-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .breakdown-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .app-wrapper { padding: 12px 10px 40px; }
+    .section { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-wrapper">
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">IB</div>
+      <div class="brand-text">
+        <h1>Generador de Reportes</h1>
+        <span>Importadora Bella — Control de Gestión</span>
+      </div>
+    </div>
+    <div class="header-badge" id="dateBadge"></div>
+  </header>
+
+  <!-- STEP 1: UPLOAD -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+    <span class="icon">📊</span>
+    <h3>Cargar archivo Excel</h3>
+    <p>Arrastra o haz clic — Todas_las_Compras (.xlsx)</p>
+    <div class="file-name hidden" id="fileName"></div>
+  </div>
+
+  <!-- STEP 2: CONFIG (hidden until file loaded) -->
+  <div class="section hidden" id="configSection">
+    <div class="section-title"><span class="dot dot-blue"></span> Configuración del Reporte</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Asesor</label>
+        <select id="selAsesor"><option value="">— Seleccionar asesor —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Hoja de datos</label>
+        <select id="selHoja"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Turno Desde</label>
+        <input type="time" id="turnoDesde" value="14:00">
+      </div>
+      <div class="form-group">
+        <label>Turno Hasta</label>
+        <input type="time" id="turnoHasta" value="20:30">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observaciones</label>
+      <textarea id="txtObs" placeholder="Escribe aquí las novedades del turno...">Sin novedades.</textarea>
+    </div>
+  </div>
+
+  <!-- STEP 3: DASHBOARD (hidden until asesor selected) -->
+  <div class="section hidden" id="dashSection">
+    <div class="section-title"><span class="dot dot-green"></span> Resumen de Gestión — <span id="asesorName" style="color:var(--c-accent)"></span></div>
+
+    <!-- Stat cards -->
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-value" id="statConf">0</div>
+        <div class="stat-label">Confirmados</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-value" id="statPend">0</div>
+        <div class="stat-label">Pendientes</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-value" id="statCanc">0</div>
+        <div class="stat-label">Cancelados</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-value" id="statReag">0</div>
+        <div class="stat-label">Reagendados</div>
+      </div>
+    </div>
+
+    <!-- Effectiveness -->
+    <div class="effectiveness-bar">
+      <div class="eff-label">Tasa de efectividad</div>
+      <div class="eff-track"><div class="eff-fill" id="effFill"></div></div>
+      <div class="eff-value" id="effValue">0%</div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-box"><canvas id="chartDona"></canvas></div>
+      <div class="chart-box"><canvas id="chartBar"></canvas></div>
+    </div>
+  </div>
+
+  <!-- PENDIENTES BREAKDOWN -->
+  <div class="section hidden" id="breakdownSection">
+    <div class="section-title"><span class="dot dot-orange"></span> Desglose de Pendientes por Calificación</div>
+    <div class="breakdown-grid" id="breakdownGrid"></div>
+  </div>
+
+  <!-- DETAIL TABLE -->
+  <div class="section hidden" id="tableSection">
+    <div class="section-title"><span class="dot dot-purple"></span> Detalle de Pedidos (<span id="tableCount">0</span>)</div>
+    <div class="detail-table-wrapper">
+      <table class="detail-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Ciudad</th>
+            <th>Estado</th>
+            <th>Calificación</th>
+            <th>Observación</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GENERATE PDF -->
+  <button class="btn-generate hidden" id="btnGenerate" onclick="generarPDF()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+    GENERAR REPORTE PDF
+  </button>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===========================
+// STATE
+// ===========================
+let workbook = null;
+let allData = [];
+let filteredData = [];
+let chartDona = null;
+let chartBar = null;
+
+// ===========================
+// INIT
+// ===========================
+document.getElementById('dateBadge').textContent = new Date().toLocaleDateString('es-EC', {
+  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+});
+
+// ===========================
+// FILE UPLOAD
+// ===========================
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+['dragenter','dragover'].forEach(e => {
+  uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.add('dragover'); });
+});
+['dragleave','drop'].forEach(e => {
+  uploadZone.addEventListener(e, ev => { ev.preventDefault(); uploadZone.classList.remove('dragover'); });
+});
+uploadZone.addEventListener('drop', ev => {
+  const file = ev.dataTransfer.files[0];
+  if (file) processFile(file);
+});
+fileInput.addEventListener('change', ev => {
+  if (ev.target.files[0]) processFile(ev.target.files[0]);
+});
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      workbook = XLSX.read(e.target.result, { type: 'array' });
+      uploadZone.classList.add('loaded');
+      uploadZone.querySelector('.icon').textContent = '✅';
+      uploadZone.querySelector('h3').textContent = 'Archivo cargado correctamente';
+      const fnEl = document.getElementById('fileName');
+      fnEl.textContent = file.name;
+      fnEl.classList.remove('hidden');
+
+      // Populate sheet selector
+      const selHoja = document.getElementById('selHoja');
+      selHoja.innerHTML = '';
+      workbook.SheetNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (name === 'Hoja 1') opt.selected = true;
+        selHoja.appendChild(opt);
+      });
+
+      loadSheetData(selHoja.value);
+      showSection('configSection');
+    } catch (err) {
+      showToast('Error al leer el archivo: ' + err.message, true);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ===========================
+// PARSE SHEET DATA
+// ===========================
+function loadSheetData(sheetName) {
+  const ws = workbook.Sheets[sheetName];
+  const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+  // Map columns
+  allData = [];
+  const colMap = detectColumns(json);
+
+  json.forEach((row, i) => {
+    const nombre = String(row[colMap.nombre] || '').trim();
+    const estado = String(row[colMap.estado] || '').trim().toUpperCase();
+    const asesor = String(row[colMap.asesor] || '').trim();
+    const ciudad = String(row[colMap.ciudad] || '').trim();
+    const calif = String(row[colMap.calificacion] || '').trim();
+    const obs = String(row[colMap.observacion] || '').trim();
+    const telefono = String(row[colMap.telefono] || '').trim();
+
+    if (nombre && estado) {
+      allData.push({ nombre, estado, asesor, ciudad, calif, obs, telefono });
+    }
+  });
+
+  // Populate asesores
+  const asesores = [...new Set(allData.map(d => d.asesor).filter(Boolean))].sort();
+  const selAsesor = document.getElementById('selAsesor');
+  selAsesor.innerHTML = '<option value="">— Todos los asesores —</option>';
+  asesores.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a; opt.textContent = a;
+    selAsesor.appendChild(opt);
+  });
+}
+
+function detectColumns(json) {
+  if (!json.length) return {};
+  const keys = Object.keys(json[0]);
+  const find = (candidates) => keys.find(k => candidates.some(c => k.toUpperCase().includes(c))) || '';
+
+  return {
+    nombre: find(['NOMBRE']),
+    estado: find(['ESTADO']),
+    asesor: find(['ASESOR']),
+    ciudad: find(['CIUDAD']),
+    calificacion: find(['CALIFICAC', 'CALIFIC']),
+    observacion: find(['OBSERVAC']),
+    telefono: find(['TELEFONO', 'TELEF']),
+  };
+}
+
+// ===========================
+// EVENTS
+// ===========================
+document.getElementById('selHoja').addEventListener('change', function() {
+  loadSheetData(this.value);
+  hideResults();
+});
+
+document.getElementById('selAsesor').addEventListener('change', function() {
+  applyFilter();
+});
+
+function applyFilter() {
+  const asesor = document.getElementById('selAsesor').value;
+  filteredData = asesor ? allData.filter(d => d.asesor === asesor) : [...allData];
+
+  if (filteredData.length === 0) {
+    showToast('No se encontraron datos para este filtro.', true);
+    hideResults();
+    return;
+  }
+
+  document.getElementById('asesorName').textContent = asesor || 'Todos';
+  renderDashboard();
+  showSection('dashSection');
+  showSection('breakdownSection');
+  showSection('tableSection');
+  document.getElementById('btnGenerate').classList.remove('hidden');
+}
+
+function hideResults() {
+  ['dashSection','breakdownSection','tableSection'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById('btnGenerate').classList.add('hidden');
+}
+
+// ===========================
+// RENDER DASHBOARD
+// ===========================
+function renderDashboard() {
+  const counts = { CONFIRMADO: 0, PENDIENTE: 0, CANCELADO: 0, REAGENDADO: 0 };
+  const califBreakdown = {};
+
+  filteredData.forEach(d => {
+    const est = d.estado;
+    if (counts.hasOwnProperty(est)) counts[est]++;
+
+    if (est === 'PENDIENTE' && d.calif) {
+      califBreakdown[d.calif] = (califBreakdown[d.calif] || 0) + 1;
+    }
+  });
+
+  const total = filteredData.length;
+  const tasa = total > 0 ? (counts.CONFIRMADO / total * 100) : 0;
+
+  // Update stat cards
+  animateValue('statConf', counts.CONFIRMADO);
+  animateValue('statPend', counts.PENDIENTE);
+  animateValue('statCanc', counts.CANCELADO);
+  animateValue('statReag', counts.REAGENDADO);
+
+  // Effectiveness bar
+  setTimeout(() => {
+    document.getElementById('effFill').style.width = tasa + '%';
+    document.getElementById('effValue').textContent = tasa.toFixed(1) + '%';
+  }, 300);
+
+  // Breakdown
+  const grid = document.getElementById('breakdownGrid');
+  grid.innerHTML = '';
+  Object.entries(califBreakdown).sort((a,b) => b[1]-a[1]).forEach(([label, count]) => {
+    grid.innerHTML += `<div class="breakdown-item">
+      <span class="bi-label">${label}</span>
+      <span class="bi-count">${count}</span>
+    </div>`;
+  });
+  if (Object.keys(califBreakdown).length === 0) {
+    grid.innerHTML = '<div class="breakdown-item"><span class="bi-label">Sin pendientes con calificación</span></div>';
+  }
+
+  // Charts
+  renderCharts(counts);
+
+  // Table
+  renderTable();
+}
+
+function animateValue(id, target) {
+  const el = document.getElementById(id);
+  let current = 0;
+  const step = Math.max(1, Math.ceil(target / 20));
+  const timer = setInterval(() => {
+    current += step;
+    if (current >= target) { current = target; clearInterval(timer); }
+    el.textContent = current;
+  }, 30);
+}
+
+// ===========================
+// CHARTS
+// ===========================
+function renderCharts(counts) {
+  const labels = ['Confirmados', 'Pendientes', 'Cancelados', 'Reagendados'];
+  const data = [counts.CONFIRMADO, counts.PENDIENTE, counts.CANCELADO, counts.REAGENDADO];
+  const colors = ['#3FB950', '#D29922', '#F85149', '#BC8CFF'];
+
+  // Destroy old
+  if (chartDona) chartDona.destroy();
+  if (chartBar) chartBar.destroy();
+
+  const defaultOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { labels: { color: '#8B949E', font: { family: "'DM Sans'", size: 12 } } }
+    }
+  };
+
+  // Donut
+  chartDona = new Chart(document.getElementById('chartDona'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderColor: '#161B22', borderWidth: 3, hoverOffset: 8 }]
+    },
+    options: {
+      ...defaultOpts,
+      cutout: '65%',
+      plugins: {
+        ...defaultOpts.plugins,
+        legend: { position: 'bottom', labels: { color: '#8B949E', padding: 12, font: { family: "'DM Sans'", size: 11 } } }
+      }
+    }
+  });
+
+  // Bar
+  chartBar = new Chart(document.getElementById('chartBar'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors, borderRadius: 6, barPercentage: 0.6 }]
+    },
+    options: {
+      ...defaultOpts,
+      plugins: { ...defaultOpts.plugins, legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8B949E', font: { size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: '#8B949E' }, grid: { color: 'rgba(48,54,61,0.5)' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ===========================
+// TABLE
+// ===========================
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  document.getElementById('tableCount').textContent = filteredData.length;
+
+  filteredData.forEach((d, i) => {
+    const badgeClass = {
+      'CONFIRMADO': 'badge-confirmado',
+      'PENDIENTE': 'badge-pendiente',
+      'CANCELADO': 'badge-cancelado',
+      'REAGENDADO': 'badge-reagendado'
+    }[d.estado] || 'badge-pendiente';
+
+    tbody.innerHTML += `<tr>
+      <td style="color:var(--c-text-muted)">${i+1}</td>
+      <td>${d.nombre}</td>
+      <td>${d.ciudad}</td>
+      <td><span class="badge ${badgeClass}">${d.estado}</span></td>
+      <td>${d.calif || '—'}</td>
+      <td style="color:var(--c-text-dim);font-size:12px">${d.obs || '—'}</td>
+    </tr>`;
+  });
+}
+
+// ===========================
+// GENERATE PDF
+// ===========================
+function generarPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const W = 210;
+
+  const asesor = document.getElementById('selAsesor').value || 'Todos';
+  const turnoDesde = document.getElementById('turnoDesde').value || '14:00';
+  const turnoHasta = document.getElementById('turnoHasta').value || '20:30';
+  const obs = document.getElementById('txtObs').value || 'Sin novedades.';
+  const fecha = new Date().toLocaleDateString('es-EC');
+
+  const counts = { CONFIRMADO: 0, PENDIENTE: 0, CANCELADO: 0, REAGENDADO: 0 };
+  const califBreak = {};
+  filteredData.forEach(d => {
+    if (counts.hasOwnProperty(d.estado)) counts[d.estado]++;
+    if (d.estado === 'PENDIENTE' && d.calif) {
+      califBreak[d.calif] = (califBreak[d.calif] || 0) + 1;
+    }
+  });
+  const total = filteredData.length;
+  const tasa = total > 0 ? (counts.CONFIRMADO / total * 100) : 0;
+
+  // --- HEADER ---
+  pdf.setFillColor(13, 17, 23);
+  pdf.rect(0, 0, W, 36, 'F');
+  pdf.setFillColor(88, 166, 255);
+  pdf.rect(0, 36, W, 1.5, 'F');
+
+  pdf.setTextColor(230, 237, 243);
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('REPORTE DIARIO DE GESTIÓN', 14, 16);
+
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(139, 148, 158);
+  pdf.text('Importadora Bella — Sistema de Control', 14, 24);
+  pdf.text('Generado: ' + fecha, 14, 30);
+
+  // --- INFO BLOCK ---
+  let y = 46;
+  pdf.setTextColor(44, 62, 80);
+  pdf.setFontSize(10);
+  pdf.setFont('helvetica', 'bold');
+
+  const infoLeft = [
+    ['ASESOR:', asesor],
+    ['TURNO:', turnoDesde + ' — ' + turnoHasta],
+  ];
+  const infoRight = [
+    ['FECHA:', fecha],
+    ['TOTAL PEDIDOS:', String(total)],
+  ];
+
+  infoLeft.forEach(([lbl, val], i) => {
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(lbl, 14, y + i*8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(val, 42, y + i*8);
+  });
+  infoRight.forEach(([lbl, val], i) => {
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(lbl, 120, y + i*8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(val, 160, y + i*8);
+  });
+
+  y += 22;
+  pdf.setDrawColor(200, 200, 200);
+  pdf.line(14, y, W-14, y);
+  y += 8;
+
+  // --- RESULTS TABLE ---
+  pdf.setFillColor(88, 166, 255);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(10);
+  pdf.rect(14, y, W-28, 10, 'F');
+  pdf.text('INDICADOR', 18, y+7);
+  pdf.text('CANTIDAD', 155, y+7);
+  y += 10;
+
+  const rows = [
+    ['Confirmados', counts.CONFIRMADO, [63,185,80]],
+    ['Pendientes', counts.PENDIENTE, [210,153,34]],
+    ['Cancelados', counts.CANCELADO, [248,81,73]],
+    ['Reagendados', counts.REAGENDADO, [188,140,255]],
+  ];
+
+  rows.forEach(([lbl, val, rgb], i) => {
+    const fillBg = i % 2 === 0;
+    if (fillBg) {
+      pdf.setFillColor(245, 246, 247);
+      pdf.rect(14, y, W-28, 9, 'F');
+    }
+    pdf.setTextColor(44, 62, 80);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.text('  ' + lbl, 18, y+6.5);
+    pdf.setTextColor(rgb[0], rgb[1], rgb[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(String(val), 163, y+6.5);
+    y += 9;
+  });
+
+  // Effectiveness highlight
+  y += 2;
+  pdf.setFillColor(13, 17, 23);
+  pdf.rect(14, y, W-28, 12, 'F');
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(11);
+  pdf.text('TASA DE EFECTIVIDAD', 18, y+8.5);
+  pdf.setTextColor(63, 185, 80);
+  pdf.text(tasa.toFixed(2) + '%', 155, y+8.5);
+  y += 18;
+
+  // --- PENDIENTES BREAKDOWN ---
+  if (Object.keys(califBreak).length > 0) {
+    pdf.setTextColor(44, 62, 80);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(11);
+    pdf.text('DESGLOSE DE PENDIENTES', 14, y);
+    y += 6;
+
+    pdf.setFontSize(9);
+    Object.entries(califBreak).sort((a,b) => b[1]-a[1]).forEach(([label, count]) => {
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('• ' + label, 18, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(210, 153, 34);
+      pdf.text(String(count), 163, y);
+      y += 6;
+    });
+    y += 4;
+  }
+
+  // --- CHARTS IMAGE ---
+  try {
+    const donaCanvas = document.getElementById('chartDona');
+    const barCanvas = document.getElementById('chartBar');
+    const donaImg = donaCanvas.toDataURL('image/png');
+    const barImg = barCanvas.toDataURL('image/png');
+
+    if (y + 65 > 280) { pdf.addPage(); y = 20; }
+
+    pdf.addImage(donaImg, 'PNG', 14, y, 85, 60);
+    pdf.addImage(barImg, 'PNG', 108, y, 85, 60);
+    y += 66;
+  } catch(e) {
+    console.warn('Charts not captured:', e);
+  }
+
+  // --- OBSERVACIONES ---
+  if (y + 30 > 280) { pdf.addPage(); y = 20; }
+  pdf.setTextColor(44, 62, 80);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(11);
+  pdf.text('OBSERVACIONES', 14, y);
+  y += 7;
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(9);
+  pdf.setTextColor(80, 80, 80);
+  const obsLines = pdf.splitTextToSize(obs, W - 32);
+  pdf.text(obsLines, 14, y);
+  y += obsLines.length * 5 + 6;
+
+  // --- DETAIL TABLE ---
+  if (y + 20 > 280) { pdf.addPage(); y = 20; }
+
+  pdf.setTextColor(44, 62, 80);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(11);
+  pdf.text('DETALLE DE PEDIDOS (' + filteredData.length + ')', 14, y);
+  y += 7;
+
+  // Table header
+  pdf.setFillColor(30, 40, 55);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(7);
+  pdf.setFont('helvetica', 'bold');
+  const colWidths = [8, 48, 32, 28, 35, 31];
+  const colHeaders = ['#', 'CLIENTE', 'CIUDAD', 'ESTADO', 'CALIFICACIÓN', 'OBSERVACIÓN'];
+  let xPos = 14;
+  pdf.rect(14, y, W-28, 7, 'F');
+  colHeaders.forEach((h, i) => {
+    pdf.text(h, xPos + 1, y + 5);
+    xPos += colWidths[i];
+  });
+  y += 7;
+
+  // Table rows
+  pdf.setFontSize(7);
+  filteredData.forEach((d, i) => {
+    if (y > 275) {
+      pdf.addPage();
+      y = 20;
+      // Re-draw header
+      xPos = 14;
+      pdf.setFillColor(30, 40, 55);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont('helvetica', 'bold');
+      pdf.rect(14, y, W-28, 7, 'F');
+      colHeaders.forEach((h, ci) => { pdf.text(h, xPos + 1, y + 5); xPos += colWidths[ci]; });
+      y += 7;
+    }
+
+    if (i % 2 === 0) {
+      pdf.setFillColor(245, 246, 247);
+      pdf.rect(14, y, W-28, 6, 'F');
+    }
+
+    pdf.setTextColor(80, 80, 80);
+    pdf.setFont('helvetica', 'normal');
+    xPos = 14;
+    const rowData = [
+      String(i+1),
+      (d.nombre || '').substring(0, 28),
+      (d.ciudad || '').substring(0, 18),
+      d.estado,
+      (d.calif || '—').substring(0, 20),
+      (d.obs || '—').substring(0, 18)
+    ];
+    rowData.forEach((val, ci) => {
+      pdf.text(val, xPos + 1, y + 4.2);
+      xPos += colWidths[ci];
+    });
+    y += 6;
+  });
+
+  // --- FOOTER ---
+  const pageCount = pdf.internal.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    pdf.setPage(p);
+    pdf.setFontSize(7);
+    pdf.setTextColor(150, 150, 150);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text('Reporte generado automáticamente — Importadora Bella — ' + fecha, W/2, 290, { align: 'center' });
+    pdf.text('Página ' + p + ' de ' + pageCount, W - 14, 290, { align: 'right' });
+  }
+
+  // Save
+  const safeName = asesor.replace(/[^a-zA-Z0-9]/g, '_');
+  const safeDate = fecha.replace(/\//g, '-');
+  pdf.save(`Reporte_${safeName}_${safeDate}.pdf`);
+  showToast('✅ Reporte PDF generado y descargado');
+}
+
+// ===========================
+// HELPERS
+// ===========================
+function showSection(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('visible'), 10);
+}
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+</script>
+</body>
+</html>
