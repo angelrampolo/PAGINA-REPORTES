@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervisor — Horarios | Importadora Bella</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ===== DESIGN TOKENS ===== */
+        :root {
+            --bg: #05080D;
+            --bg2: #0A0F18;
+            --surf: #0F1520;
+            --surf2: #151D2C;
+            --surf3: #1B2538;
+            --brd: #1E2A3E;
+            --brd2: #2A3A54;
+            --brd-glow: rgba(99, 179, 255, .15);
+            --acc: #63B3FF;
+            --acc2: #3A8EE6;
+            --acc3: #1C6AC0;
+            --acc-glow: rgba(99, 179, 255, .12);
+            --grn: #4ADE80;
+            --grn2: #22C55E;
+            --grn-bg: rgba(74, 222, 128, .08);
+            --red: #FB7185;
+            --red2: #F43F5E;
+            --red-bg: rgba(251, 113, 133, .08);
+            --org: #FBBF24;
+            --org-bg: rgba(251, 191, 36, .08);
+            --pur: #A78BFA;
+            --pur-bg: rgba(167, 139, 250, .08);
+            --pink: #F472B6;
+            --cyan: #22D3EE;
+            --txt: #E8EDF5;
+            --txt2: #C1CBDA;
+            --dim: #6B7D95;
+            --mute: #3D4F66;
+            --r: 16px;
+            --r2: 12px;
+            --r3: 8px;
+            --f: 'Inter', system-ui, -apple-system, sans-serif;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, .3);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, .4);
+            --shadow-lg: 0 16px 64px rgba(0, 0, 0, .5);
+            --shadow-glow: 0 0 40px rgba(99, 179, 255, .08);
+        }
+
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            font-family: var(--f);
+            background: var(--bg);
+            color: var(--txt);
+            min-height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Ambient background glow */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 800px 600px at 10% 20%, rgba(99, 179, 255, .04), transparent),
+                radial-gradient(ellipse 600px 500px at 90% 80%, rgba(167, 139, 250, .03), transparent),
+                radial-gradient(ellipse 400px 300px at 50% 50%, rgba(74, 222, 128, .02), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--mute);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dim);
+        }
+
+        /* ===== LOGIN OVERLAY ===== */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 8, 13, .92);
+            backdrop-filter: blur(24px) saturate(1.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn .5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0
+            }
+
+            to {
+                opacity: 1
+            }
+        }
+
+        .login-card {
+            background: linear-gradient(170deg, var(--surf2), var(--surf));
+            border: 1px solid var(--brd2);
+            border-radius: 24px;
+            padding: 48px 40px 40px;
+            width: 400px;
+            max-width: 92vw;
+            box-shadow: var(--shadow-lg), 0 0 80px rgba(99, 179, 255, .06);
+            animation: cardIn .6s cubic-bezier(.22, 1, .36, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--acc), var(--pur), var(--pink));
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(24px) scale(.96)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--acc), var(--pur));
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: #fff;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 32px rgba(99, 179, 255, .3);
+            letter-spacing: -1px;
+        }
+
+        .login-card h2 {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--txt), var(--acc));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .login-card .subtitle {
+            text-align: center;
+            font-size: 13px;
+            color: var(--dim);
+            margin-bottom: 28px;
+            font-weight: 400;
+        }
+
+        .login-field {
+            margin-bottom: 16px;
+        }
+
+        .login-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .login-field input {
+            width: 100%;
+            font-family: var(--f);
+            font-size: 14px;
+            font-weight: 500;
+            padding: 13px 16px;
+            background: var(--bg2);
+            border: 1px solid var(--brd);
+            border-radius: var(--r3);
+            color: var(--txt);
+            outline: 0;
+            transition: all .2s ease;
+        }
+
+        .login-field input:focus {
+            border-color: var(--acc);
+            box-shadow: 0 0 0 4px var(--acc-glow), var(--shadow-glow);
+        }
+
+        .login-field input::placeholder {
+            color: var(--mute);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            font-family: var(--f);
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: .3px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--acc2), var(--acc));
+            border: none;
+            border-radius: var(--r3);
+            cursor: pointer;
+            transition: all .25s ease;
+            margin-top: 8px;
+            box-shadow: 0 4px 20px rgba(99, 179, 255, .25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(99, 179, 255, .35);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .login-err {
+            color: var(--red);
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 12px;
+            min-height: 18px;
+        }
+
+        /* ===== MAIN APP SHELL ===== */
+        .app {
+            position: relative;
+            z-index: 1;
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .app.active {
+            display: flex;
+        }
+
+        /* ===== TOP BAR ===== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: linear-gradient(180deg, var(--surf), var(--bg2));
+            border-bottom: 1px solid var(--brd);
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .topbar::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--acc-glow), transparent);
+        }
+
+        .tb-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .tb-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--acc), var(--pur));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(99, 179, 255, .2);
+            letter-spacing: -0.5px;
+        }
+
+        .tb-info h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -.3px;
+            line-height: 1.2;
+        }
+
+        .tb-info small {
+            font-size: 11px;
+            color: var(--dim);
+            font-weight: 400;
+        }
+
+        .tb-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            font-family: var(--f);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: var(--r3);
+            border: 1px solid var(--brd);
+            background: var(--surf2);
+            color: var(--txt2);
+            cursor: pointer;
+            transition: all .2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            border-color: var(--brd2);
+            background: var(--surf3);
+            color: var(--txt);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--acc3), var(--acc2));
+            border-color: var(--acc2);
+            color: #fff;
+            box-shadow: 0 2px 16px rgba(99, 179, 255, .2);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 24px rgba(99, 179, 255, .3);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            border-color: rgba(251, 113, 133, .3);
+            color: var(--red);
+        }
+
+        .btn-danger:hover {
+            background: var(--red-bg);
+            border-color: var(--red);
+        }
+
+        .btn-clear {
+            border-color: rgba(251, 191, 36, .3);
+            color: var(--org);
+        }
+
+        .btn-clear:hover {
+            background: var(--org-bg);
+            border-color: var(--org);
+        }
+
+        /* ===== CONTENT AREA ===== */
+        .content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 300px;
+            border-right: 1px solid var(--brd);
+            background: var(--bg2);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sb-section {
+            padding: 18px 18px 14px;
+            flex-shrink: 0;
+        }
+
+        .sb-section+.sb-section {
+            border-top: 1px solid var(--brd);
+        }
+
+        .sb-section.scrollable {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 8px;
+        }
+
+        .sb-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .sb-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--dim);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sb-label .indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .sb-count {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--mute);
+            background: var(--surf3);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .sb-input-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .sb-input-row input {
+            flex: 1;
+            font-family: var(--f);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 9px 12px;
+            background: var(--surf);
+            border: 1px solid var(--brd);
+            border-radius: var(--r3);
+            color: var(--txt);
+            outline: 0;
+            transition: all .2s;
+        }
+
+        .sb-input-row input:focus {
+            border-color: var(--acc);
+            box-shadow: 0 0 0 3px var(--acc-glow);
+        }
+
+        .sb-input-row input::placeholder {
+            color: var(--mute);
+            font-weight: 400;
+        }
+
+        .sb-input-row .btn-add {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: var(--r3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all .2s;
+            font-size: 20px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+        .btn-add-worker {
+            background: linear-gradient(135deg, var(--acc3), var(--acc2));
+        }
+
+        .btn-add-worker:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(99, 179, 255, .3);
+        }
+
+        .btn-add-area {
+            background: linear-gradient(135deg, var(--grn2), var(--grn));
+        }
+
+        .btn-add-area:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(74, 222, 128, .3);
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* Worker chip (draggable) */
+        .worker-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--r3);
+            cursor: grab;
+            transition: all .18s ease;
+            border: 1px solid transparent;
+            font-size: 13px;
+            font-weight: 600;
+            user-select: none;
+            position: relative;
+        }
+
+        .worker-chip::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--r3);
+            opacity: 0;
+            transition: opacity .2s;
+            pointer-events: none;
+        }
+
+        .worker-chip:hover {
+            transform: translateX(4px);
+            border-color: rgba(255, 255, 255, .06);
+        }
+
+        .worker-chip:hover::before {
+            opacity: 1;
+        }
+
+        .worker-chip:active {
+            cursor: grabbing;
+            transform: scale(.97);
+            opacity: .8;
+        }
+
+        .worker-chip .wc-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .worker-chip .wc-name {
+            flex: 1;
+        }
+
+        .worker-chip .wc-remove {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            opacity: 0;
+            transition: all .15s;
+            cursor: pointer;
+            background: rgba(251, 113, 133, .15);
+            color: var(--red);
+        }
+
+        .worker-chip:hover .wc-remove {
+            opacity: 1;
+        }
+
+        .worker-chip .wc-remove:hover {
+            background: var(--red);
+            color: #fff;
+            transform: scale(1.15);
+        }
+
+        /* Area chip */
+        .area-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: var(--r3);
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--surf);
+            border: 1px solid var(--brd);
+            transition: all .18s;
+            color: var(--txt2);
+        }
+
+        .area-chip:hover {
+            border-color: var(--brd2);
+        }
+
+        .area-chip .ac-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 3px;
+            background: var(--grn);
+            flex-shrink: 0;
+        }
+
+        .area-chip .ac-name {
+            flex: 1;
+        }
+
+        .area-chip .ac-remove {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 11px;
+            font-weight: 700;
+            opacity: 0;
+            transition: all .15s;
+            cursor: pointer;
+            background: rgba(251, 113, 133, .15);
+            color: var(--red);
+        }
+
+        .area-chip:hover .ac-remove {
+            opacity: 1;
+        }
+
+        .area-chip .ac-remove:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        /* Helper text */
+        .sb-hint {
+            font-size: 11px;
+            color: var(--mute);
+            font-style: italic;
+            text-align: center;
+            padding: 12px 8px;
+        }
+
+        /* ===== SCHEDULE MAIN AREA ===== */
+        .schedule-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg);
+        }
+
+        /* Toolbar above grid */
+        .grid-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 20px;
+            background: var(--bg2);
+            border-bottom: 1px solid var(--brd);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .gt-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .gt-group label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+        }
+
+        .gt-group input[type=number],
+        .gt-group select {
+            font-family: var(--f);
+            font-size: 13px;
+            font-weight: 600;
+            width: 56px;
+            padding: 6px 8px;
+            background: var(--surf);
+            border: 1px solid var(--brd);
+            border-radius: 6px;
+            color: var(--txt);
+            outline: 0;
+            text-align: center;
+            transition: all .2s;
+        }
+
+        .gt-group input:focus,
+        .gt-group select:focus {
+            border-color: var(--acc);
+            box-shadow: 0 0 0 3px var(--acc-glow);
+        }
+
+        .gt-spacer {
+            flex: 1;
+        }
+
+        .gt-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .gt-stat {
+            font-size: 11px;
+            color: var(--dim);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .gt-stat strong {
+            font-weight: 700;
+            color: var(--txt);
+        }
+
+        /* ===== SCHEDULE GRID ===== */
+        .schedule-scroll {
+            flex: 1;
+            overflow: auto;
+            padding: 16px 16px 40px;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 64px repeat(7, 1fr);
+            border-radius: var(--r2);
+            overflow: hidden;
+            border: 1px solid var(--brd);
+            background: var(--surf);
+            box-shadow: var(--shadow-sm);
+            min-width: 700px;
+        }
+
+        /* Header cells */
+        .sg-hdr {
+            padding: 14px 8px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(180deg, var(--surf2), var(--surf));
+            border-bottom: 2px solid var(--brd);
+            border-right: 1px solid var(--brd);
+            color: var(--dim);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .sg-hdr:last-child {
+            border-right: none;
+        }
+
+        .sg-hdr.day-col {
+            color: var(--acc);
+            font-weight: 800;
+        }
+
+        .sg-hdr.day-col .day-short {
+            display: block;
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--dim);
+            margin-top: 2px;
+            letter-spacing: .5px;
+            text-transform: none;
+        }
+
+        .sg-hdr.today-col {
+            color: var(--grn);
+            background: linear-gradient(180deg, rgba(74, 222, 128, .06), transparent);
+        }
+
+        .sg-hdr.today-col::after {
+            content: 'HOY';
+            display: block;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--grn);
+            margin-top: 2px;
+            background: rgba(74, 222, 128, .12);
+            border-radius: 4px;
+            padding: 1px 6px;
+            display: inline-block;
+        }
+
+        .sg-hdr.weekend-col {
+            color: var(--org);
+        }
+
+        /* Time cells */
+        .sg-time {
+            padding: 0 8px;
+            text-align: center;
+            font-family: var(--f);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--mute);
+            border-bottom: 1px solid var(--brd);
+            border-right: 1px solid var(--brd);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg2);
+            letter-spacing: .5px;
+        }
+
+        /* Data cells */
+        .sg-cell {
+            min-height: 56px;
+            border-bottom: 1px solid var(--brd);
+            border-right: 1px solid var(--brd);
+            padding: 4px;
+            transition: background .15s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            position: relative;
+            background: var(--bg2);
+        }
+
+        .sg-cell:nth-child(8n) {
+            border-right: none;
+        }
+
+        .sg-cell:hover {
+            background: rgba(99, 179, 255, .02);
+        }
+
+        /* Drag over state */
+        .sg-cell.drag-over {
+            background: rgba(99, 179, 255, .08) !important;
+            box-shadow: inset 0 0 0 2px var(--acc), inset 0 0 20px rgba(99, 179, 255, .06);
+        }
+
+        .sg-cell.drag-over::after {
+            content: '+ Soltar aquí';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--acc);
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            pointer-events: none;
+            opacity: .7;
+        }
+
+        .sg-cell.drag-over.has-entries::after {
+            display: none;
+        }
+
+        /* Even/odd row alternation */
+        .sg-cell.row-even {
+            background: var(--surf);
+        }
+
+        .sg-cell.row-even:hover {
+            background: rgba(99, 179, 255, .03);
+        }
+
+        /* Weekend columns */
+        .sg-cell.weekend {
+            background: rgba(251, 191, 36, .02);
+        }
+
+        /* Today column highlight */
+        .sg-cell.today-highlight {
+            background: rgba(74, 222, 128, .03);
+        }
+
+        /* ===== CELL ENTRIES (assigned workers) ===== */
+        .cell-entry {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            position: relative;
+            animation: entryPop .3s cubic-bezier(.22, 1, .36, 1);
+            cursor: default;
+            transition: all .15s;
+            border: 1px solid transparent;
+        }
+
+        @keyframes entryPop {
+            from {
+                opacity: 0;
+                transform: scale(.8) translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .cell-entry:hover {
+            border-color: rgba(255, 255, 255, .1);
+        }
+
+        .cell-entry .ce-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .cell-entry .ce-name {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+        }
+
+        .cell-entry .ce-area-tag {
+            font-size: 9px;
+            font-weight: 500;
+            opacity: .65;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 60px;
+            padding: 1px 5px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, .08);
+        }
+
+        .cell-entry .ce-remove {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 9px;
+            font-weight: 800;
+            opacity: 0;
+            transition: all .12s;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, .3);
+            color: rgba(255, 255, 255, .7);
+        }
+
+        .cell-entry:hover .ce-remove {
+            opacity: 1;
+        }
+
+        .cell-entry .ce-remove:hover {
+            background: var(--red);
+            color: #fff;
+            transform: scale(1.2);
+        }
+
+        /* Area selector on click */
+        .cell-entry .ce-select {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            padding: 12px 24px;
+            border-radius: var(--r3);
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transition: all .4s cubic-bezier(.22, 1, .36, 1);
+            z-index: 3000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(12px);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.ok {
+            background: rgba(74, 222, 128, .15);
+            border: 1px solid rgba(74, 222, 128, .3);
+            color: var(--grn);
+        }
+
+        .toast.err {
+            background: rgba(251, 113, 133, .15);
+            border: 1px solid rgba(251, 113, 133, .3);
+            color: var(--red);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 960px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--brd);
+                max-height: 220px;
+                flex-direction: row;
+            }
+
+            .sb-section {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .topbar {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .tb-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== LOGIN ===== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <div class="login-logo">IB</div>
+            <h2>Acceso Supervisor</h2>
+            <p class="subtitle">Panel de gestión de horarios — Importadora Bella</p>
+            <div class="login-field">
+                <label>Usuario</label>
+                <input type="text" id="loginUser" placeholder="Ingrese su usuario" autocomplete="off">
+            </div>
+            <div class="login-field">
+                <label>Contraseña</label>
+                <input type="password" id="loginPass" placeholder="••••••••">
+            </div>
+            <button class="btn-login" id="btnLogin">Iniciar Sesión</button>
+            <div class="login-err" id="loginErr"></div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APP ===== -->
+    <div class="app" id="mainApp">
+        <div class="topbar">
+            <div class="tb-brand">
+                <div class="tb-logo">IB</div>
+                <div class="tb-info">
+                    <h1>Gestión de Horarios</h1>
+                    <small>Supervisor — Importadora Bella</small>
+                </div>
+            </div>
+            <div class="tb-actions">
+                <a href="index.html" class="btn">← Reportes</a>
+                <button class="btn btn-clear" id="btnClear" title="Limpiar todo el horario">🗑 Limpiar</button>
+                <button class="btn btn-primary" id="btnPDF">📄 Descargar PDF</button>
+                <button class="btn btn-danger" id="btnLogout">Salir</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <!-- Workers -->
+                <div class="sb-section">
+                    <div class="sb-head">
+                        <div class="sb-label">
+                            <span class="indicator" style="background:var(--acc)"></span>
+                            Trabajadores
+                        </div>
+                        <span class="sb-count" id="workerCount">0</span>
+                    </div>
+                    <div class="sb-input-row">
+                        <input id="workerInput" placeholder="Nombre del trabajador…" maxlength="30">
+                        <button class="btn-add btn-add-worker" id="btnAddWorker" title="Agregar">+</button>
+                    </div>
+                    <div class="item-list" id="workerList"></div>
+                    <div class="sb-hint" id="workerHint">Arrastra los trabajadores hacia la grilla →</div>
+                </div>
+
+                <!-- Areas -->
+                <div class="sb-section scrollable">
+                    <div class="sb-head">
+                        <div class="sb-label">
+                            <span class="indicator" style="background:var(--grn)"></span>
+                            Áreas de Trabajo
+                        </div>
+                        <span class="sb-count" id="areaCount">0</span>
+                    </div>
+                    <div class="sb-input-row">
+                        <input id="areaInput" placeholder="Nombre del área…" maxlength="30">
+                        <button class="btn-add btn-add-area" id="btnAddArea" title="Agregar">+</button>
+                    </div>
+                    <div class="item-list" id="areaList"></div>
+                </div>
+            </div>
+
+            <!-- SCHEDULE AREA -->
+            <div class="schedule-area">
+                <div class="grid-toolbar">
+                    <div class="gt-group">
+                        <label>Desde</label>
+                        <input type="number" id="hourStart" value="6" min="0" max="23">
+                        <label>Hasta</label>
+                        <input type="number" id="hourEnd" value="22" min="1" max="24">
+                        <button class="btn" id="btnApply" style="padding:6px 12px">Aplicar</button>
+                    </div>
+                    <div class="gt-spacer"></div>
+                    <div class="gt-stats">
+                        <div class="gt-stat">Turnos asignados: <strong id="statAssigned">0</strong></div>
+                        <div class="gt-stat">Celdas: <strong id="statCells">0</strong></div>
+                    </div>
+                </div>
+                <div class="schedule-scroll">
+                    <div class="schedule-grid" id="scheduleGrid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ===== STATE ===== */
+        let workers = [];
+        let areas = [];
+        let schedule = {};
+        let hourStart = 6, hourEnd = 22;
+
+        const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+        const DAY_SHORT = ['Día completo', 'Día completo', 'Día completo', 'Día completo', 'Día completo', 'Fin de semana', 'Fin de semana'];
+        const COLORS = [
+            '#63B3FF', '#4ADE80', '#FBBF24', '#FB7185', '#A78BFA', '#F472B6', '#22D3EE',
+            '#FB923C', '#818CF8', '#2DD4BF', '#E879F9', '#84CC16', '#34D399', '#F59E0B',
+            '#EC4899', '#38BDF8', '#A3E635', '#C084FC'
+        ];
+        let colorIdx = 0;
+        let dragWorkerId = null;
+
+        /* ===== SELECTORS ===== */
+        const $ = id => document.getElementById(id);
+
+        /* ===== LOGIN ===== */
+        function doLogin() {
+            const u = $('loginUser').value.trim();
+            const p = $('loginPass').value;
+            if (u === 'admin' && p === 'admin') {
+                sessionStorage.setItem('sv_auth', '1');
+                $('loginOverlay').style.display = 'none';
+                $('mainApp').classList.add('active');
+                loadState();
+                rebuildGrid();
+            } else {
+                $('loginErr').textContent = '⚠ Usuario o contraseña incorrectos';
+                $('loginPass').value = '';
+                $('loginPass').focus();
+            }
+        }
+
+        $('btnLogin').addEventListener('click', doLogin);
+        $('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+        $('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') { $('loginPass').focus(); } });
+
+        $('btnLogout').addEventListener('click', () => {
+            sessionStorage.removeItem('sv_auth');
+            location.reload();
+        });
+
+        // Auto-login
+        if (sessionStorage.getItem('sv_auth') === '1') {
+            $('loginOverlay').style.display = 'none';
+            $('mainApp').classList.add('active');
+        }
+
+        /* ===== PERSISTENCE ===== */
+        function saveState() {
+            try {
+                localStorage.setItem('sv_data', JSON.stringify({
+                    workers, areas, schedule, hourStart, hourEnd, colorIdx
+                }));
+            } catch (e) { }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem('sv_data');
+                if (!raw) return;
+                const d = JSON.parse(raw);
+                if (d.workers) workers = d.workers;
+                if (d.areas) areas = d.areas;
+                if (d.schedule) schedule = d.schedule;
+                if (d.hourStart != null) { hourStart = d.hourStart; $('hourStart').value = hourStart; }
+                if (d.hourEnd != null) { hourEnd = d.hourEnd; $('hourEnd').value = hourEnd; }
+                if (d.colorIdx != null) colorIdx = d.colorIdx;
+                renderWorkers();
+                renderAreas();
+            } catch (e) { }
+        }
+
+        /* ===== WORKERS ===== */
+        function addWorker() {
+            const inp = $('workerInput');
+            const name = inp.value.trim();
+            if (!name) { toast('Ingrese un nombre', true); return; }
+            // Duplicate check
+            if (workers.some(w => w.name.toLowerCase() === name.toLowerCase())) {
+                toast('Este trabajador ya existe', true); return;
+            }
+            const color = COLORS[colorIdx % COLORS.length];
+            colorIdx++;
+            workers.push({ id: 'w' + Date.now() + Math.random().toString(36).slice(2, 6), name, color });
+            inp.value = '';
+            inp.focus();
+            renderWorkers();
+            rebuildGrid();
+            saveState();
+            toast('Trabajador agregado');
+        }
+
+        function removeWorker(id) {
+            workers = workers.filter(w => w.id !== id);
+            Object.keys(schedule).forEach(k => {
+                schedule[k] = schedule[k].filter(e => e.workerId !== id);
+                if (!schedule[k].length) delete schedule[k];
+            });
+            renderWorkers();
+            rebuildGrid();
+            saveState();
+        }
+
+        function renderWorkers() {
+            const list = $('workerList');
+            if (!workers.length) {
+                list.innerHTML = '';
+                $('workerHint').style.display = 'block';
+            } else {
+                $('workerHint').style.display = workers.length ? 'block' : 'none';
+                list.innerHTML = workers.map(w => `
+      <div class="worker-chip" draggable="true" data-wid="${w.id}"
+           style="background:${hexAlpha(w.color, .1)};color:${w.color}">
+        <span class="wc-dot" style="background:${w.color}"></span>
+        <span class="wc-name">${esc(w.name)}</span>
+        <span class="wc-remove" data-remove="${w.id}" title="Eliminar">✕</span>
+      </div>
+    `).join('');
+
+                // Attach drag events
+                list.querySelectorAll('.worker-chip').forEach(chip => {
+                    chip.addEventListener('dragstart', e => {
+                        dragWorkerId = chip.dataset.wid;
+                        e.dataTransfer.effectAllowed = 'copy';
+                        e.dataTransfer.setData('text/plain', chip.dataset.wid);
+                        chip.style.opacity = '.5';
+                        document.body.classList.add('dragging');
+                    });
+                    chip.addEventListener('dragend', e => {
+                        chip.style.opacity = '1';
+                        document.body.classList.remove('dragging');
+                        // Clean up any leftover drag-over states
+                        document.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+                    });
+                });
+
+                // Remove buttons
+                list.querySelectorAll('.wc-remove').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        e.stopPropagation();
+                        removeWorker(btn.dataset.remove);
+                    });
+                });
+            }
+            $('workerCount').textContent = workers.length;
+        }
+
+        $('btnAddWorker').addEventListener('click', addWorker);
+        $('workerInput').addEventListener('keydown', e => { if (e.key === 'Enter') addWorker(); });
+
+        /* ===== AREAS ===== */
+        function addArea() {
+            const inp = $('areaInput');
+            const name = inp.value.trim();
+            if (!name) { toast('Ingrese un nombre de área', true); return; }
+            // Duplicate check
+            if (areas.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+                toast('Esta área ya existe', true); return;
+            }
+            areas.push({ id: 'a' + Date.now() + Math.random().toString(36).slice(2, 6), name });
+            inp.value = '';
+            inp.focus();
+            renderAreas();
+            rebuildGrid();
+            saveState();
+            toast('Área agregada');
+        }
+
+        function removeArea(id) {
+            areas = areas.filter(a => a.id !== id);
+            Object.keys(schedule).forEach(k => {
+                schedule[k].forEach(e => { if (e.areaId === id) e.areaId = ''; });
+            });
+            renderAreas();
+            rebuildGrid();
+            saveState();
+        }
+
+        function renderAreas() {
+            const list = $('areaList');
+            list.innerHTML = areas.map(a => `
+    <div class="area-chip">
+      <span class="ac-icon"></span>
+      <span class="ac-name">${esc(a.name)}</span>
+      <span class="ac-remove" data-remove="${a.id}" title="Eliminar">✕</span>
+    </div>
+  `).join('');
+
+            list.querySelectorAll('.ac-remove').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    removeArea(btn.dataset.remove);
+                });
+            });
+
+            $('areaCount').textContent = areas.length;
+        }
+
+        $('btnAddArea').addEventListener('click', addArea);
+        $('areaInput').addEventListener('keydown', e => { if (e.key === 'Enter') addArea(); });
+
+        /* ===== CLEAR SCHEDULE ===== */
+        $('btnClear').addEventListener('click', () => {
+            if (!Object.keys(schedule).length) { toast('El horario ya está vacío', true); return; }
+            if (confirm('¿Seguro que desea limpiar todo el horario?')) {
+                schedule = {};
+                rebuildGrid();
+                saveState();
+                toast('Horario limpiado');
+            }
+        });
+
+        /* ===== GRID ===== */
+        function getTodayIndex() {
+            const d = new Date().getDay();
+            return d === 0 ? 6 : d - 1; // 0=Mon..6=Sun
+        }
+
+        function rebuildGrid() {
+            hourStart = parseInt($('hourStart').value) || 6;
+            hourEnd = parseInt($('hourEnd').value) || 22;
+            if (hourEnd <= hourStart) { hourEnd = hourStart + 1; $('hourEnd').value = hourEnd; }
+
+            const grid = $('scheduleGrid');
+            const todayIdx = getTodayIndex();
+            let html = '';
+
+            // Headers
+            html += '<div class="sg-hdr">🕐</div>';
+            DAYS.forEach((d, i) => {
+                let cls = 'sg-hdr day-col';
+                if (i === todayIdx) cls += ' today-col';
+                if (i >= 5) cls += ' weekend-col';
+                const shortLabel = i >= 5 ? 'Fin de semana' : '';
+                html += `<div class="${cls}">${d}${i === todayIdx ? '' : (shortLabel ? `<span class="day-short">${shortLabel}</span>` : '')}</div>`;
+            });
+
+            // Rows
+            let totalAssigned = 0;
+            let totalCells = 0;
+            for (let h = hourStart; h < hourEnd; h++) {
+                const isEven = (h - hourStart) % 2 === 0;
+                html += `<div class="sg-time">${pad(h)}:00</div>`;
+                for (let di = 0; di < 7; di++) {
+                    const key = di + '-' + h;
+                    const entries = schedule[key] || [];
+                    totalAssigned += entries.length;
+                    totalCells++;
+
+                    let cls = 'sg-cell';
+                    if (isEven) cls += ' row-even';
+                    if (di >= 5) cls += ' weekend';
+                    if (di === todayIdx) cls += ' today-highlight';
+                    if (entries.length > 0) cls += ' has-entries';
+
+                    let cellHTML = entries.map(en => {
+                        const w = workers.find(ww => ww.id === en.workerId);
+                        if (!w) return '';
+                        const area = areas.find(aa => aa.id === en.areaId);
+                        const aName = area ? area.name : '';
+                        const areaOpts = areas.map(aa =>
+                            `<option value="${aa.id}" ${aa.id === en.areaId ? 'selected' : ''}>${esc(aa.name)}</option>`
+                        ).join('');
+                        return `<div class="cell-entry" style="background:${hexAlpha(w.color, .14)};color:${w.color}">
+          <span class="ce-dot" style="background:${w.color}"></span>
+          <span class="ce-name">${esc(w.name)}</span>
+          ${aName ? `<span class="ce-area-tag">${esc(aName)}</span>` : ''}
+          <span class="ce-remove" data-key="${key}" data-wid="${w.id}" title="Quitar">✕</span>
+          ${areas.length ? `<select class="ce-select" data-key="${key}" data-wid="${w.id}" title="Cambiar área">${areaOpts}</select>` : ''}
+        </div>`;
+                    }).join('');
+
+                    html += `<div class="${cls}" data-key="${key}">${cellHTML}</div>`;
+                }
+            }
+            grid.innerHTML = html;
+
+            // Stats
+            $('statAssigned').textContent = totalAssigned;
+            $('statCells').textContent = totalCells;
+
+            // Attach cell events
+            grid.querySelectorAll('.sg-cell').forEach(cell => {
+                cell.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    cell.classList.add('drag-over');
+                });
+                cell.addEventListener('dragleave', e => {
+                    cell.classList.remove('drag-over');
+                });
+                cell.addEventListener('drop', e => {
+                    e.preventDefault();
+                    cell.classList.remove('drag-over');
+                    const wid = e.dataTransfer.getData('text/plain') || dragWorkerId;
+                    if (!wid) return;
+                    const key = cell.dataset.key;
+                    if (!schedule[key]) schedule[key] = [];
+                    if (schedule[key].some(en => en.workerId === wid)) {
+                        toast('Este trabajador ya está aquí', true);
+                        return;
+                    }
+                    const defArea = areas.length ? areas[0].id : '';
+                    schedule[key].push({ workerId: wid, areaId: defArea });
+                    rebuildGrid();
+                    saveState();
+                });
+            });
+
+            // Remove buttons on entries
+            grid.querySelectorAll('.ce-remove').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const key = btn.dataset.key;
+                    const wid = btn.dataset.wid;
+                    if (!schedule[key]) return;
+                    schedule[key] = schedule[key].filter(en => en.workerId !== wid);
+                    if (!schedule[key].length) delete schedule[key];
+                    rebuildGrid();
+                    saveState();
+                });
+            });
+
+            // Area selectors
+            grid.querySelectorAll('.ce-select').forEach(sel => {
+                sel.addEventListener('change', e => {
+                    const key = sel.dataset.key;
+                    const wid = sel.dataset.wid;
+                    if (!schedule[key]) return;
+                    const entry = schedule[key].find(en => en.workerId === wid);
+                    if (entry) entry.areaId = sel.value;
+                    rebuildGrid();
+                    saveState();
+                });
+            });
+
+            saveState();
+        }
+
+        $('btnApply').addEventListener('click', rebuildGrid);
+        $('hourStart').addEventListener('change', rebuildGrid);
+        $('hourEnd').addEventListener('change', rebuildGrid);
+
+        /* ===== PDF EXPORT ===== */
+        $('btnPDF').addEventListener('click', exportPDF);
+
+        function exportPDF() {
+            if (!workers.length) { toast('Agregue al menos un trabajador', true); return; }
+            if (!Object.keys(schedule).length) { toast('El horario está vacío', true); return; }
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const W = 297, H = 210, M = 10;
+            let y = 0;
+
+            const cBg = [5, 8, 13], cSurf = [15, 21, 32], cAcc = [99, 179, 255],
+                cGrn = [74, 222, 128], cDim = [107, 125, 149], cTxt = [232, 237, 245];
+
+            // Header bar
+            pdf.setFillColor(...cBg); pdf.rect(0, 0, W, 26, 'F');
+            // Gradient accent line
+            pdf.setFillColor(...cAcc); pdf.rect(0, 26, W, 1, 'F');
+
+            pdf.setTextColor(...cTxt); pdf.setFontSize(15); pdf.setFont('helvetica', 'bold');
+            pdf.text('HORARIO SEMANAL', M, 12);
+            pdf.setFontSize(9); pdf.setTextColor(...cAcc); pdf.setFont('helvetica', 'normal');
+            pdf.text('IMPORTADORA BELLA', M, 19);
+
+            pdf.setFontSize(8); pdf.setTextColor(...cDim);
+            const dateStr = new Date().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            pdf.text('Generado: ' + dateStr, W - M, 12, { align: 'right' });
+            pdf.text('Rango horario: ' + pad(hourStart) + ':00 — ' + pad(hourEnd) + ':00', W - M, 19, { align: 'right' });
+
+            y = 32;
+
+            // Grid layout
+            const timeColW = 18;
+            const colW = (W - 2 * M - timeColW) / 7;
+            const hours = hourEnd - hourStart;
+            const maxRowH = (H - y - 28) / (hours + 1);
+            const rowH = Math.min(11, maxRowH);
+
+            // Day headers
+            pdf.setFillColor(...cSurf); pdf.rect(M, y, W - 2 * M, 7, 'F');
+            pdf.setTextColor(...cAcc); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
+            pdf.text('HORA', M + timeColW / 2, y + 4.8, { align: 'center' });
+            DAYS.forEach((d, i) => {
+                pdf.text(d.toUpperCase(), M + timeColW + i * colW + colW / 2, y + 4.8, { align: 'center' });
+            });
+            y += 7;
+
+            // Data rows
+            for (let h = hourStart; h < hourEnd; h++) {
+                if (y + rowH > H - 14) {
+                    pdf.addPage();
+                    y = 12;
+                }
+
+                // Row background
+                const isEven = (h - hourStart) % 2 === 0;
+                if (isEven) {
+                    pdf.setFillColor(248, 249, 251);
+                } else {
+                    pdf.setFillColor(255, 255, 255);
+                }
+                pdf.rect(M, y, W - 2 * M, rowH, 'F');
+
+                // Time cell
+                pdf.setDrawColor(220, 225, 231);
+                pdf.rect(M, y, timeColW, rowH);
+                pdf.setFillColor(240, 242, 246); pdf.rect(M, y, timeColW, rowH, 'F');
+                pdf.setDrawColor(220, 225, 231); pdf.rect(M, y, timeColW, rowH);
+                pdf.setTextColor(100, 110, 125); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'bold');
+                pdf.text(pad(h) + ':00', M + timeColW / 2, y + rowH / 2 + 1.2, { align: 'center' });
+
+                // Day cells
+                for (let di = 0; di < 7; di++) {
+                    const cx = M + timeColW + di * colW;
+                    pdf.setDrawColor(220, 225, 231);
+                    pdf.rect(cx, y, colW, rowH);
+
+                    const key = di + '-' + h;
+                    const entries = schedule[key] || [];
+
+                    if (entries.length > 0) {
+                        const entryH = Math.min(4.5, (rowH - 1.5) / entries.length);
+                        entries.forEach((en, ei) => {
+                            const w = workers.find(ww => ww.id === en.workerId);
+                            if (!w) return;
+                            const area = areas.find(aa => aa.id === en.areaId);
+                            const rgb = hexToRgb(w.color);
+                            const ey = y + 0.8 + ei * (entryH + 0.3);
+
+                            // Entry background
+                            pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
+                            pdf.roundedRect(cx + 0.8, ey, colW - 1.6, entryH, 1, 1, 'F');
+
+                            // Entry text
+                            pdf.setTextColor(255, 255, 255); pdf.setFontSize(5.5); pdf.setFont('helvetica', 'bold');
+                            let label = w.name;
+                            if (area) label += ' · ' + area.name;
+                            if (label.length > 24) label = label.substring(0, 22) + '…';
+                            pdf.text(label, cx + 2.5, ey + entryH - 1);
+                        });
+                    }
+                }
+                y += rowH;
+            }
+
+            // Worker legend
+            y += 6;
+            if (y + 12 > H - 8) { pdf.addPage(); y = 12; }
+            pdf.setFillColor(...cSurf); pdf.rect(M, y, W - 2 * M, 6, 'F');
+            pdf.setTextColor(...cTxt); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
+            pdf.text('EQUIPO DE TRABAJO', M + 3, y + 4.2);
+            y += 8;
+
+            const cols = Math.min(5, workers.length);
+            const lColW = (W - 2 * M) / cols;
+            workers.forEach((w, i) => {
+                const lx = M + (i % cols) * lColW;
+                const ly = y + Math.floor(i / cols) * 5;
+                if (ly + 5 > H - 6) return;
+                const rgb = hexToRgb(w.color);
+                pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
+                pdf.circle(lx + 2.5, ly + 1.5, 1.5, 'F');
+                pdf.setTextColor(60, 70, 85); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'normal');
+                pdf.text(w.name, lx + 6, ly + 2.5);
+            });
+
+            // Footer all pages
+            const pgs = pdf.internal.getNumberOfPages();
+            for (let p = 1; p <= pgs; p++) {
+                pdf.setPage(p);
+                pdf.setFontSize(6.5); pdf.setTextColor(160); pdf.setFont('helvetica', 'italic');
+                pdf.text('Importadora Bella — Horario generado automáticamente', W / 2, H - 5, { align: 'center' });
+                pdf.text('Pág. ' + p + '/' + pgs, W - M, H - 5, { align: 'right' });
+            }
+
+            const fname = 'Horario_Semanal_' + new Date().toLocaleDateString('es-EC').replace(/\//g, '-') + '.pdf';
+            pdf.save(fname);
+            toast('PDF descargado: ' + fname);
+        }
+
+        /* ===== UTILS ===== */
+        function pad(n) { return String(n).padStart(2, '0'); }
+        function hexAlpha(hex, a) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r},${g},${b},${a})`;
+        }
+        function hexToRgb(hex) {
+            return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+        }
+        function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        function toast(msg, isErr) {
+            const t = $('toast');
+            t.textContent = (isErr ? '⚠ ' : '✅ ') + msg;
+            t.className = 'toast ' + (isErr ? 'err' : 'ok');
+            setTimeout(() => t.classList.add('show'), 10);
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        /* ===== INIT ===== */
+        if (sessionStorage.getItem('sv_auth') === '1') {
+            loadState();
+            rebuildGrid();
+        }
+    </script>
+</body>
+
+</html>
