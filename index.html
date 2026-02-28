@@ -1,626 +1,1187 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generador de Reportes | Importadora Bella</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg:#0B0F14;--surf:#141A22;--surf2:#1A2230;--brd:#262F3D;--brd2:#354055;
-  --acc:#4C9AFF;--acc2:#1B6BDB;
-  --grn:#34D399;--grn-d:rgba(52,211,153,.12);
-  --red:#F87171;--red-d:rgba(248,113,113,.12);
-  --org:#FBBF24;--org-d:rgba(251,191,36,.12);
-  --pur:#A78BFA;--pur-d:rgba(167,139,250,.12);
-  --txt:#E2E8F0;--dim:#7E8A9A;--mute:#4A5568;
-  --r:14px;--rs:8px;
-  --f:'DM Sans',system-ui,sans-serif;--fm:'Space Mono',monospace;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:var(--f);background:var(--bg);color:var(--txt);min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background:
-  radial-gradient(ellipse at 15% 30%,rgba(76,154,255,.05),transparent 60%),
-  radial-gradient(ellipse at 85% 70%,rgba(167,139,250,.04),transparent 60%);
-  pointer-events:none;z-index:0}
-.wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:20px 16px 80px}
-
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 0 24px;border-bottom:1px solid var(--brd);margin-bottom:28px}
-.hdr-brand{display:flex;align-items:center;gap:12px}
-.hdr-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--acc),var(--pur));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:#fff;letter-spacing:-.5px;box-shadow:0 4px 20px rgba(76,154,255,.25)}
-.hdr h1{font-size:17px;font-weight:700;letter-spacing:-.3px}
-.hdr small{font-size:11px;color:var(--dim);display:block;margin-top:2px}
-.hdr-date{font-family:var(--fm);font-size:10px;color:var(--dim);border:1px solid var(--brd);padding:5px 10px;border-radius:20px}
-
-.upload{border:2px dashed var(--brd);border-radius:var(--r);padding:44px 20px;text-align:center;cursor:pointer;background:var(--surf);transition:.3s}
-.upload:hover{border-color:var(--acc);background:rgba(76,154,255,.03)}
-.upload.ok{border-color:var(--grn);border-style:solid;background:var(--grn-d)}
-.upload .ico{font-size:36px;margin-bottom:8px;display:block}
-.upload h3{font-size:15px;font-weight:500;margin-bottom:4px}
-.upload p{font-size:12px;color:var(--dim)}
-.upload input{display:none}
-.upload .fname{font-family:var(--fm);font-size:12px;color:var(--grn);margin-top:6px}
-
-.sec{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:22px;margin-top:18px;animation:fu .35s ease both}
-@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.sec-t{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.1px;color:var(--dim);margin-bottom:16px;display:flex;align-items:center;gap:7px}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
-.d-bl{background:var(--acc)}.d-gn{background:var(--grn)}.d-or{background:var(--org)}.d-pu{background:var(--pur)}.d-rd{background:var(--red)}
-
-.tabs{display:flex;gap:6px;margin-bottom:18px}
-.tab{flex:1;padding:12px;text-align:center;font-size:13px;font-weight:600;border:1px solid var(--brd);border-radius:var(--rs);cursor:pointer;transition:.2s;background:var(--bg);color:var(--dim)}
-.tab:hover{border-color:var(--acc);color:var(--txt)}
-.tab.on{background:var(--acc2);border-color:var(--acc);color:#fff;box-shadow:0 2px 12px rgba(76,154,255,.2)}
-.tab sm{display:block;font-size:10px;font-weight:400;margin-top:3px;opacity:.7}
-
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.fg{display:flex;flex-direction:column;gap:5px}
-.fg label{font-size:11px;font-weight:500;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
-.fg select,.fg input,.fg textarea{font-family:var(--f);font-size:13px;padding:9px 12px;background:var(--bg);border:1px solid var(--brd);border-radius:var(--rs);color:var(--txt);outline:0;transition:.2s}
-.fg select:focus,.fg input:focus,.fg textarea:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(76,154,255,.08)}
-.fg textarea{resize:vertical;min-height:70px}
-
-.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.sc{background:var(--bg);border:1px solid var(--brd);border-radius:var(--rs);padding:16px 10px;text-align:center;position:relative;overflow:hidden}
-.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.sc.gn::before{background:var(--grn)}.sc.rd::before{background:var(--red)}.sc.or::before{background:var(--org)}.sc.pu::before{background:var(--pur)}
-.sc .sv{font-family:var(--fm);font-size:30px;font-weight:700;line-height:1}
-.sc.gn .sv{color:var(--grn)}.sc.rd .sv{color:var(--red)}.sc.or .sv{color:var(--org)}.sc.pu .sv{color:var(--pur)}
-.sc .sp{font-family:var(--fm);font-size:13px;color:var(--dim);margin-top:2px}
-.sc .sl{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;font-weight:500;margin-top:6px}
-
-.eff{background:var(--bg);border:1px solid var(--brd);border-radius:var(--rs);padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.eff-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);white-space:nowrap}
-.eff-t{flex:1;height:10px;background:var(--surf2);border-radius:10px;overflow:hidden}
-.eff-f{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--acc),var(--grn));transition:width .8s cubic-bezier(.22,1,.36,1);width:0%}
-.eff-v{font-family:var(--fm);font-size:18px;font-weight:700;color:var(--grn);min-width:60px;text-align:right}
-
-.bk-grid{display:grid;grid-template-columns:1fr;gap:6px}
-.bk-item{display:flex;align-items:center;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:var(--rs);gap:10px}
-.bk-bar{flex:1;height:6px;background:var(--surf2);border-radius:6px;overflow:hidden;min-width:40px}
-.bk-bar-fill{height:100%;border-radius:6px;transition:width .6s ease}
-.bk-lab{font-size:12px;color:var(--dim);min-width:180px}
-.bk-val{font-family:var(--fm);font-size:13px;font-weight:700;min-width:36px;text-align:right}
-.bk-pct{font-family:var(--fm);font-size:11px;color:var(--dim);min-width:45px;text-align:right}
-
-.btn-g{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;margin-top:22px;font-family:var(--f);font-size:14px;font-weight:700;letter-spacing:.4px;color:#fff;background:linear-gradient(135deg,var(--acc2),var(--acc));border:none;border-radius:var(--r);cursor:pointer;transition:.3s;box-shadow:0 4px 20px rgba(76,154,255,.2)}
-.btn-g:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(76,154,255,.3)}
-.btn-g:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
-
-.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--grn);color:#fff;border-radius:var(--rs);font-size:13px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.4);transform:translateY(90px);opacity:0;transition:.4s cubic-bezier(.22,1,.36,1);z-index:999}
-.toast.show{transform:translateY(0);opacity:1}.toast.err{background:var(--red)}
-.hid{display:none!important}
-
-@media(max-width:700px){
-  .sg{grid-template-columns:repeat(2,1fr)}.fr{grid-template-columns:1fr}
-  .hdr{flex-direction:column;gap:10px;align-items:flex-start}
-  .bk-lab{min-width:100px;font-size:11px}.tabs{flex-direction:column}
-}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header class="hdr">
-    <div class="hdr-brand">
-      <div class="hdr-icon">IB</div>
-      <div><h1>Generador de Reportes</h1><small>Importadora Bella — Control de Gestión</small></div>
-    </div>
-    <div class="hdr-date" id="dateBadge"></div>
-  </header>
-
-  <div class="upload" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-    <input type="file" id="fileInput" accept=".xlsx,.xls">
-    <span class="ico">📊</span>
-    <h3>Cargar archivo Excel</h3>
-    <p>Arrastra o selecciona — Todas las Compras (.xlsx)</p>
-    <div class="fname hid" id="fileName"></div>
-  </div>
-
-  <div class="sec hid" id="modeSection">
-    <div class="sec-t"><span class="dot d-bl"></span> Tipo de Reporte</div>
-    <div class="tabs">
-      <div class="tab on" data-mode="asesor" onclick="setMode('asesor')">📋 Reporte por Asesor<sm>Hoja 1 — Gestión individual</sm></div>
-      <div class="tab" data-mode="dia" onclick="setMode('dia')">📊 Reporte del Día<sm>Limpieza de Datos — Resumen general</sm></div>
-    </div>
-  </div>
-
-  <div class="sec hid" id="cfgAsesor">
-    <div class="sec-t"><span class="dot d-pu"></span> Configuración — Reporte Asesor</div>
-    <div class="fr">
-      <div class="fg"><label>Asesor</label><select id="selAsesor"><option value="">— Seleccionar —</option></select></div>
-      <div class="fg"><label>Nombre completo (PDF)</label><input id="nombreAsesor" placeholder="Ej: Angel Apolo"></div>
-    </div>
-    <div class="fr">
-      <div class="fg"><label>Turno Desde</label><input type="time" id="turnoDesde" value="14:00"></div>
-      <div class="fg"><label>Turno Hasta</label><input type="time" id="turnoHasta" value="20:30"></div>
-    </div>
-    <div class="fg"><label>Observaciones del Turno</label><textarea id="txtObs" placeholder="Novedades...">Sin novedades.</textarea></div>
-  </div>
-
-  <div class="sec hid" id="cfgDia">
-    <div class="sec-t"><span class="dot d-pu"></span> Configuración — Reporte del Día</div>
-    <div class="fr">
-      <div class="fg"><label>Fecha del Reporte</label><input type="date" id="fechaDia"></div>
-      <div class="fg"><label>Supervisor</label><input id="supervisor" placeholder="Nombre del supervisor"></div>
-    </div>
-    <div class="fg"><label>Observaciones Generales</label><textarea id="txtObsDia" placeholder="Resumen del día...">Sin novedades.</textarea></div>
-  </div>
-
-  <div class="sec hid" id="dashSection">
-    <div class="sec-t"><span class="dot d-gn"></span> Resumen — <span id="dashTitle" style="color:var(--acc)"></span></div>
-    <div class="sg">
-      <div class="sc gn"><div class="sv" id="sConf">0</div><div class="sp" id="sConfP">0%</div><div class="sl">Confirmados</div></div>
-      <div class="sc or"><div class="sv" id="sPend">0</div><div class="sp" id="sPendP">0%</div><div class="sl">Pendientes</div></div>
-      <div class="sc rd"><div class="sv" id="sCanc">0</div><div class="sp" id="sCancP">0%</div><div class="sl">Cancelados</div></div>
-      <div class="sc pu"><div class="sv" id="sReag">0</div><div class="sp" id="sReagP">0%</div><div class="sl">Reagendados</div></div>
-    </div>
-    <div class="eff"><div class="eff-l">Efectividad</div><div class="eff-t"><div class="eff-f" id="effFill"></div></div><div class="eff-v" id="effVal">0%</div></div>
-  </div>
-
-  <div class="sec hid" id="pendSection">
-    <div class="sec-t"><span class="dot d-or"></span> Desglose Detallado de Pendientes — ¿Qué pasó?</div>
-    <div id="pendBreakdown"></div>
-  </div>
-
-  <div class="sec hid" id="califSection">
-    <div class="sec-t"><span class="dot d-pu"></span> Desglose por Calificación</div>
-    <div id="califBreakdown"></div>
-  </div>
-
-  <div class="sec hid" id="obsSection">
-    <div class="sec-t"><span class="dot d-rd"></span> Resultado de Gestión (Observaciones)</div>
-    <div id="obsBreakdown"></div>
-  </div>
-
-  <div class="sec hid" id="dropiSection">
-    <div class="sec-t"><span class="dot d-bl"></span> Estado Logístico (DROPI)</div>
-    <div id="dropiBreakdown"></div>
-  </div>
-  <div class="sec hid" id="provSection">
-    <div class="sec-t"><span class="dot d-gn"></span> Distribución por Provincia</div>
-    <div id="provBreakdown"></div>
-  </div>
-  <div class="sec hid" id="prodSection">
-    <div class="sec-t"><span class="dot d-pu"></span> Productos — % de Confirmación por Producto</div>
-    <div id="prodBreakdown"></div>
-  </div>
-
-  <button class="btn-g hid" id="btnGen" onclick="generarPDF()">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
-    DESCARGAR REPORTE PDF
-  </button>
-</div>
-<div class="toast" id="toast"></div>
-
-<script>
-let wb=null,mode='asesor',report={};
-const $=id=>document.getElementById(id);
-$('dateBadge').textContent=new Date().toLocaleDateString('es-EC',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-$('fechaDia').value=new Date().toISOString().split('T')[0];
-
-// UPLOAD
-const uz=$('uploadZone'),fi=$('fileInput');
-['dragenter','dragover'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.style.borderColor='var(--acc)'}));
-['dragleave','drop'].forEach(e=>uz.addEventListener(e,ev=>{ev.preventDefault();uz.style.borderColor=''}));
-uz.addEventListener('drop',ev=>{if(ev.dataTransfer.files[0])loadFile(ev.dataTransfer.files[0])});
-fi.addEventListener('change',ev=>{if(ev.target.files[0])loadFile(ev.target.files[0])});
-
-function loadFile(file){
-  const r=new FileReader();
-  r.onload=function(e){
-    try{
-      wb=XLSX.read(e.target.result,{type:'array'});
-      uz.classList.add('ok');uz.querySelector('.ico').textContent='✅';
-      uz.querySelector('h3').textContent='Archivo cargado';
-      const fn=$('fileName');fn.textContent=file.name;fn.classList.remove('hid');
-      initApp();
-    }catch(err){toast('Error: '+err.message,1)}
-  };
-  r.readAsArrayBuffer(file);
-}
-
-function initApp(){
-  const ws=wb.Sheets['Hoja 1'];
-  if(!ws){toast('No se encontró "Hoja 1"',1);return}
-  const json=XLSX.utils.sheet_to_json(ws,{defval:''});
-  const asesores=new Set();
-  json.forEach(row=>{const a=fv(row,['ASESOR','Asesor']);if(a&&a.trim())asesores.add(a.trim())});
-  const sel=$('selAsesor');
-  sel.innerHTML='<option value="">— Seleccionar asesor —</option>';
-  [...asesores].sort().forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o)});
-  show('modeSection');setMode('asesor');
-}
-
-function setMode(m){
-  mode=m;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.mode===m));
-  ['cfgAsesor','cfgDia','dashSection','pendSection','califSection','obsSection','dropiSection','provSection','prodSection','btnGen'].forEach(hide);
-  if(m==='asesor'){show('cfgAsesor')}else{show('cfgDia');setTimeout(buildReportDia,50)}
-}
-
-$('selAsesor').addEventListener('change',()=>{if($('selAsesor').value)buildReport()});
-document.querySelector('[data-mode="dia"]').addEventListener('click',()=>setTimeout(buildReportDia,100));
-
-// ========== REPORT: ASESOR ==========
-function buildReport(){
-  const asesor=$('selAsesor').value;
-  if(!asesor)return;
-  const json=XLSX.utils.sheet_to_json(wb.Sheets['Hoja 1'],{defval:''});
-  const rows=json.filter(r=>String(fv(r,['ASESOR','Asesor'])||'').trim()===asesor);
-  if(!rows.length){toast('Sin datos para '+asesor,1);return}
-
-  const counts={CONFIRMADO:0,PENDIENTE:0,CANCELADO:0,REAGENDADO:0};
-  const califs={},obsMap={},pendObs={};
-
-  rows.forEach(r=>{
-    const est=String(fv(r,['ESTADO'])||'').trim().toUpperCase();
-    if(counts.hasOwnProperty(est))counts[est]++;
-    const cal=String(fv(r,['CALIFICAC','CALIFIC'])||'').trim();
-    if(cal)califs[cal]=(califs[cal]||0)+1;
-    const ob=String(fv(r,['OBSERVAC'])||'').trim();
-    if(ob)obsMap[ob]=(obsMap[ob]||0)+1;
-    if(est==='PENDIENTE'){const k=ob||cal||'Sin detalle';pendObs[k]=(pendObs[k]||0)+1}
-  });
-
-  const total=rows.length;
-  const tasa=total>0?(counts.CONFIRMADO/total*100):0;
-  report={mode:'asesor',asesor,total,counts,califs,obsMap,pendObs,tasa,
-    turnoDesde:$('turnoDesde').value,turnoHasta:$('turnoHasta').value,
-    nombre:$('nombreAsesor').value||asesor,obs:$('txtObs').value};
-
-  renderDash(asesor,total,counts,tasa);
-  renderBk('pendBreakdown',pendObs,counts.PENDIENTE,'var(--org)');
-  renderBk('califBreakdown',califs,total,'var(--pur)');
-  renderBk('obsBreakdown',obsMap,total,'var(--red)');
-  ['dashSection','pendSection','califSection','obsSection','btnGen'].forEach(show);
-  ['dropiSection','provSection','prodSection'].forEach(hide);
-}
-
-// ========== REPORT: DIA ==========
-function buildReportDia(){
-  const ws=wb.Sheets['LIMPIEZA DE DATOS'];
-  if(!ws){toast('No se encontró "LIMPIEZA DE DATOS"',1);return}
-  const json=XLSX.utils.sheet_to_json(ws,{defval:''});
-
-  const counts={CONFIRMADO:0,PENDIENTE:0,CANCELADO:0,REAGENDADO:0};
-  const califs={},obsMap={},pendObs={},dropi={},provs={},prods={};
-
-  json.forEach(r=>{
-    const est=String(fv(r,['ESTADO'])||'').trim().toUpperCase();
-    if(counts.hasOwnProperty(est))counts[est]++;
-    const cal=String(fv(r,['CALIFICAC','CALIFIC'])||'').trim();
-    if(cal)califs[cal]=(califs[cal]||0)+1;
-    const ob=String(fv(r,['OBSERVAC'])||'').trim();
-    if(ob)obsMap[ob]=(obsMap[ob]||0)+1;
-    if(est==='PENDIENTE'){pendObs[ob||cal||'Sin detalle']=(pendObs[ob||cal||'Sin detalle']||0)+1}
-    const dr=String(fv(r,['DROPI'])||'').trim();
-    if(dr&&dr!=='#N/A'&&dr!=='')dropi[dr]=(dropi[dr]||0)+1;
-    const pv=String(fv(r,['PROVINCIA'])||'').trim();
-    if(pv)provs[pv]=(provs[pv]||0)+1;
-    const pd=String(fv(r,['PRODUCTO'])||'').trim();
-    if(pd&&pd!=='#N/A'&&pd!==''){
-      if(!prods[pd])prods[pd]={total:0,conf:0};
-      prods[pd].total++;
-      if(est==='CONFIRMADO')prods[pd].conf++;
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Reportes | Importadora Bella</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0B0F14;
+      --surf: #141A22;
+      --surf2: #1A2230;
+      --brd: #262F3D;
+      --brd2: #354055;
+      --acc: #4C9AFF;
+      --acc2: #1B6BDB;
+      --grn: #34D399;
+      --grn-d: rgba(52, 211, 153, .12);
+      --red: #F87171;
+      --red-d: rgba(248, 113, 113, .12);
+      --org: #FBBF24;
+      --org-d: rgba(251, 191, 36, .12);
+      --pur: #A78BFA;
+      --pur-d: rgba(167, 139, 250, .12);
+      --txt: #E2E8F0;
+      --dim: #7E8A9A;
+      --mute: #4A5568;
+      --r: 14px;
+      --rs: 8px;
+      --f: 'DM Sans', system-ui, sans-serif;
+      --fm: 'Space Mono', monospace;
     }
-  });
 
-  const total=json.filter(r=>String(fv(r,['ESTADO'])||'').trim()).length;
-  const tasa=total>0?(counts.CONFIRMADO/total*100):0;
-  report={mode:'dia',total,counts,califs,obsMap,pendObs,dropi,provs,prods,tasa,
-    fecha:$('fechaDia').value,supervisor:$('supervisor').value,obs:$('txtObsDia').value};
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
 
-  renderDash('Reporte General del Día',total,counts,tasa);
-  renderBk('pendBreakdown',pendObs,counts.PENDIENTE,'var(--org)');
-  renderBk('califBreakdown',califs,total,'var(--pur)');
-  renderBk('obsBreakdown',obsMap,total,'var(--red)');
-  renderBk('dropiBreakdown',dropi,sum(dropi),'var(--acc)');
-  renderBk('provBreakdown',provs,total,'var(--grn)');
-  renderProds('prodBreakdown',prods);
-  ['dashSection','pendSection','califSection','obsSection','dropiSection','provSection','prodSection','btnGen'].forEach(show);
-}
+    body {
+      font-family: var(--f);
+      background: var(--bg);
+      color: var(--txt);
+      min-height: 100vh
+    }
 
-// ========== RENDERS ==========
-function renderDash(title,total,counts,tasa){
-  $('dashTitle').textContent=title+' ('+total+' pedidos)';
-  const pct=n=>total>0?(n/total*100).toFixed(1)+'%':'0%';
-  anim('sConf',counts.CONFIRMADO);$('sConfP').textContent=pct(counts.CONFIRMADO);
-  anim('sPend',counts.PENDIENTE);$('sPendP').textContent=pct(counts.PENDIENTE);
-  anim('sCanc',counts.CANCELADO);$('sCancP').textContent=pct(counts.CANCELADO);
-  anim('sReag',counts.REAGENDADO);$('sReagP').textContent=pct(counts.REAGENDADO);
-  setTimeout(()=>{$('effFill').style.width=tasa+'%';$('effVal').textContent=tasa.toFixed(1)+'%'},200);
-}
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 30%, rgba(76, 154, 255, .05), transparent 60%),
+        radial-gradient(ellipse at 85% 70%, rgba(167, 139, 250, .04), transparent 60%);
+      pointer-events: none;
+      z-index: 0
+    }
 
-function renderBk(id,dataMap,totalRef,color){
-  const el=$(id);
-  const sorted=Object.entries(dataMap).sort((a,b)=>b[1]-a[1]);
-  if(!sorted.length){el.innerHTML='<div style="color:var(--mute);font-size:12px;padding:8px">Sin datos</div>';return}
-  el.innerHTML='<div class="bk-grid">'+sorted.map(([label,count])=>{
-    const pct=totalRef>0?(count/totalRef*100):0;
-    return `<div class="bk-item">
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px 16px 80px
+    }
+
+    .hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0 24px;
+      border-bottom: 1px solid var(--brd);
+      margin-bottom: 28px
+    }
+
+    .hdr-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .hdr-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--acc), var(--pur));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      color: #fff;
+      letter-spacing: -.5px;
+      box-shadow: 0 4px 20px rgba(76, 154, 255, .25)
+    }
+
+    .hdr h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -.3px
+    }
+
+    .hdr small {
+      font-size: 11px;
+      color: var(--dim);
+      display: block;
+      margin-top: 2px
+    }
+
+    .hdr-date {
+      font-family: var(--fm);
+      font-size: 10px;
+      color: var(--dim);
+      border: 1px solid var(--brd);
+      padding: 5px 10px;
+      border-radius: 20px
+    }
+
+    .hdr-right {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .btn-sup {
+      font-family: var(--f);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--acc);
+      color: var(--acc);
+      background: rgba(76, 154, 255, .08);
+      text-decoration: none;
+      transition: .2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    .btn-sup:hover {
+      background: rgba(76, 154, 255, .18);
+      color: #fff
+    }
+
+    .upload {
+      border: 2px dashed var(--brd);
+      border-radius: var(--r);
+      padding: 44px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--surf);
+      transition: .3s
+    }
+
+    .upload:hover {
+      border-color: var(--acc);
+      background: rgba(76, 154, 255, .03)
+    }
+
+    .upload.ok {
+      border-color: var(--grn);
+      border-style: solid;
+      background: var(--grn-d)
+    }
+
+    .upload .ico {
+      font-size: 36px;
+      margin-bottom: 8px;
+      display: block
+    }
+
+    .upload h3 {
+      font-size: 15px;
+      font-weight: 500;
+      margin-bottom: 4px
+    }
+
+    .upload p {
+      font-size: 12px;
+      color: var(--dim)
+    }
+
+    .upload input {
+      display: none
+    }
+
+    .upload .fname {
+      font-family: var(--fm);
+      font-size: 12px;
+      color: var(--grn);
+      margin-top: 6px
+    }
+
+    .sec {
+      background: var(--surf);
+      border: 1px solid var(--brd);
+      border-radius: var(--r);
+      padding: 22px;
+      margin-top: 18px;
+      animation: fu .35s ease both
+    }
+
+    @keyframes fu {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .sec-t {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      color: var(--dim);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 7px
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block
+    }
+
+    .d-bl {
+      background: var(--acc)
+    }
+
+    .d-gn {
+      background: var(--grn)
+    }
+
+    .d-or {
+      background: var(--org)
+    }
+
+    .d-pu {
+      background: var(--pur)
+    }
+
+    .d-rd {
+      background: var(--red)
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--brd);
+      border-radius: var(--rs);
+      cursor: pointer;
+      transition: .2s;
+      background: var(--bg);
+      color: var(--dim)
+    }
+
+    .tab:hover {
+      border-color: var(--acc);
+      color: var(--txt)
+    }
+
+    .tab.on {
+      background: var(--acc2);
+      border-color: var(--acc);
+      color: #fff;
+      box-shadow: 0 2px 12px rgba(76, 154, 255, .2)
+    }
+
+    .tab sm {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      margin-top: 3px;
+      opacity: .7
+    }
+
+    .fr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px
+    }
+
+    .fg {
+      display: flex;
+      flex-direction: column;
+      gap: 5px
+    }
+
+    .fg label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .5px
+    }
+
+    .fg select,
+    .fg input,
+    .fg textarea {
+      font-family: var(--f);
+      font-size: 13px;
+      padding: 9px 12px;
+      background: var(--bg);
+      border: 1px solid var(--brd);
+      border-radius: var(--rs);
+      color: var(--txt);
+      outline: 0;
+      transition: .2s
+    }
+
+    .fg select:focus,
+    .fg input:focus,
+    .fg textarea:focus {
+      border-color: var(--acc);
+      box-shadow: 0 0 0 3px rgba(76, 154, 255, .08)
+    }
+
+    .fg textarea {
+      resize: vertical;
+      min-height: 70px
+    }
+
+    .sg {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px
+    }
+
+    .sc {
+      background: var(--bg);
+      border: 1px solid var(--brd);
+      border-radius: var(--rs);
+      padding: 16px 10px;
+      text-align: center;
+      position: relative;
+      overflow: hidden
+    }
+
+    .sc::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px
+    }
+
+    .sc.gn::before {
+      background: var(--grn)
+    }
+
+    .sc.rd::before {
+      background: var(--red)
+    }
+
+    .sc.or::before {
+      background: var(--org)
+    }
+
+    .sc.pu::before {
+      background: var(--pur)
+    }
+
+    .sc .sv {
+      font-family: var(--fm);
+      font-size: 30px;
+      font-weight: 700;
+      line-height: 1
+    }
+
+    .sc.gn .sv {
+      color: var(--grn)
+    }
+
+    .sc.rd .sv {
+      color: var(--red)
+    }
+
+    .sc.or .sv {
+      color: var(--org)
+    }
+
+    .sc.pu .sv {
+      color: var(--pur)
+    }
+
+    .sc .sp {
+      font-family: var(--fm);
+      font-size: 13px;
+      color: var(--dim);
+      margin-top: 2px
+    }
+
+    .sc .sl {
+      font-size: 10px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      font-weight: 500;
+      margin-top: 6px
+    }
+
+    .eff {
+      background: var(--bg);
+      border: 1px solid var(--brd);
+      border-radius: var(--rs);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px
+    }
+
+    .eff-l {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--dim);
+      white-space: nowrap
+    }
+
+    .eff-t {
+      flex: 1;
+      height: 10px;
+      background: var(--surf2);
+      border-radius: 10px;
+      overflow: hidden
+    }
+
+    .eff-f {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--acc), var(--grn));
+      transition: width .8s cubic-bezier(.22, 1, .36, 1);
+      width: 0%
+    }
+
+    .eff-v {
+      font-family: var(--fm);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--grn);
+      min-width: 60px;
+      text-align: right
+    }
+
+    .bk-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px
+    }
+
+    .bk-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--brd);
+      border-radius: var(--rs);
+      gap: 10px
+    }
+
+    .bk-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--surf2);
+      border-radius: 6px;
+      overflow: hidden;
+      min-width: 40px
+    }
+
+    .bk-bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      transition: width .6s ease
+    }
+
+    .bk-lab {
+      font-size: 12px;
+      color: var(--dim);
+      min-width: 180px
+    }
+
+    .bk-val {
+      font-family: var(--fm);
+      font-size: 13px;
+      font-weight: 700;
+      min-width: 36px;
+      text-align: right
+    }
+
+    .bk-pct {
+      font-family: var(--fm);
+      font-size: 11px;
+      color: var(--dim);
+      min-width: 45px;
+      text-align: right
+    }
+
+    .btn-g {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px;
+      margin-top: 22px;
+      font-family: var(--f);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .4px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--acc2), var(--acc));
+      border: none;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: .3s;
+      box-shadow: 0 4px 20px rgba(76, 154, 255, .2)
+    }
+
+    .btn-g:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(76, 154, 255, .3)
+    }
+
+    .btn-g:disabled {
+      opacity: .35;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      background: var(--grn);
+      color: #fff;
+      border-radius: var(--rs);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .4);
+      transform: translateY(90px);
+      opacity: 0;
+      transition: .4s cubic-bezier(.22, 1, .36, 1);
+      z-index: 999
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1
+    }
+
+    .toast.err {
+      background: var(--red)
+    }
+
+    .hid {
+      display: none !important
+    }
+
+    @media(max-width:700px) {
+      .sg {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .fr {
+        grid-template-columns: 1fr
+      }
+
+      .hdr {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start
+      }
+
+      .bk-lab {
+        min-width: 100px;
+        font-size: 11px
+      }
+
+      .tabs {
+        flex-direction: column
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="hdr">
+      <div class="hdr-brand">
+        <div class="hdr-icon">IB</div>
+        <div>
+          <h1>Generador de Reportes</h1><small>Importadora Bella — Control de Gestión</small>
+        </div>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-date" id="dateBadge"></div>
+        <a href="supervisor.html" class="btn-sup">🔐 Supervisor</a>
+      </div>
+    </header>
+
+    <div class="upload" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <span class="ico">📊</span>
+      <h3>Cargar archivo Excel</h3>
+      <p>Arrastra o selecciona — Todas las Compras (.xlsx)</p>
+      <div class="fname hid" id="fileName"></div>
+    </div>
+
+    <div class="sec hid" id="modeSection">
+      <div class="sec-t"><span class="dot d-bl"></span> Tipo de Reporte</div>
+      <div class="tabs">
+        <div class="tab on" data-mode="asesor" onclick="setMode('asesor')">📋 Reporte por Asesor<sm>Hoja 1 — Gestión
+            individual</sm>
+        </div>
+        <div class="tab" data-mode="dia" onclick="setMode('dia')">📊 Reporte del Día<sm>Limpieza de Datos — Resumen
+            general</sm>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec hid" id="cfgAsesor">
+      <div class="sec-t"><span class="dot d-pu"></span> Configuración — Reporte Asesor</div>
+      <div class="fr">
+        <div class="fg"><label>Asesor</label><select id="selAsesor">
+            <option value="">— Seleccionar —</option>
+          </select></div>
+        <div class="fg"><label>Nombre completo (PDF)</label><input id="nombreAsesor" placeholder="Ej: Angel Apolo">
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label>Turno Desde</label><input type="time" id="turnoDesde" value="14:00"></div>
+        <div class="fg"><label>Turno Hasta</label><input type="time" id="turnoHasta" value="20:30"></div>
+      </div>
+      <div class="fg"><label>Observaciones del Turno</label><textarea id="txtObs"
+          placeholder="Novedades...">Sin novedades.</textarea></div>
+    </div>
+
+    <div class="sec hid" id="cfgDia">
+      <div class="sec-t"><span class="dot d-pu"></span> Configuración — Reporte del Día</div>
+      <div class="fr">
+        <div class="fg"><label>Fecha del Reporte</label><input type="date" id="fechaDia"></div>
+        <div class="fg"><label>Supervisor</label><input id="supervisor" placeholder="Nombre del supervisor"></div>
+      </div>
+      <div class="fg"><label>Observaciones Generales</label><textarea id="txtObsDia"
+          placeholder="Resumen del día...">Sin novedades.</textarea></div>
+    </div>
+
+    <div class="sec hid" id="dashSection">
+      <div class="sec-t"><span class="dot d-gn"></span> Resumen — <span id="dashTitle" style="color:var(--acc)"></span>
+      </div>
+      <div class="sg">
+        <div class="sc gn">
+          <div class="sv" id="sConf">0</div>
+          <div class="sp" id="sConfP">0%</div>
+          <div class="sl">Confirmados</div>
+        </div>
+        <div class="sc or">
+          <div class="sv" id="sPend">0</div>
+          <div class="sp" id="sPendP">0%</div>
+          <div class="sl">Pendientes</div>
+        </div>
+        <div class="sc rd">
+          <div class="sv" id="sCanc">0</div>
+          <div class="sp" id="sCancP">0%</div>
+          <div class="sl">Cancelados</div>
+        </div>
+        <div class="sc pu">
+          <div class="sv" id="sReag">0</div>
+          <div class="sp" id="sReagP">0%</div>
+          <div class="sl">Reagendados</div>
+        </div>
+      </div>
+      <div class="eff">
+        <div class="eff-l">Efectividad</div>
+        <div class="eff-t">
+          <div class="eff-f" id="effFill"></div>
+        </div>
+        <div class="eff-v" id="effVal">0%</div>
+      </div>
+    </div>
+
+    <div class="sec hid" id="pendSection">
+      <div class="sec-t"><span class="dot d-or"></span> Desglose Detallado de Pendientes — ¿Qué pasó?</div>
+      <div id="pendBreakdown"></div>
+    </div>
+
+    <div class="sec hid" id="califSection">
+      <div class="sec-t"><span class="dot d-pu"></span> Desglose por Calificación</div>
+      <div id="califBreakdown"></div>
+    </div>
+
+    <div class="sec hid" id="obsSection">
+      <div class="sec-t"><span class="dot d-rd"></span> Resultado de Gestión (Observaciones)</div>
+      <div id="obsBreakdown"></div>
+    </div>
+
+    <div class="sec hid" id="dropiSection">
+      <div class="sec-t"><span class="dot d-bl"></span> Estado Logístico (DROPI)</div>
+      <div id="dropiBreakdown"></div>
+    </div>
+    <div class="sec hid" id="provSection">
+      <div class="sec-t"><span class="dot d-gn"></span> Distribución por Provincia</div>
+      <div id="provBreakdown"></div>
+    </div>
+    <div class="sec hid" id="prodSection">
+      <div class="sec-t"><span class="dot d-pu"></span> Productos — % de Confirmación por Producto</div>
+      <div id="prodBreakdown"></div>
+    </div>
+
+    <button class="btn-g hid" id="btnGen" onclick="generarPDF()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="12" y1="18" x2="12" y2="12" />
+        <polyline points="9 15 12 18 15 15" />
+      </svg>
+      DESCARGAR REPORTE PDF
+    </button>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let wb = null, mode = 'asesor', report = {};
+    const $ = id => document.getElementById(id);
+    $('dateBadge').textContent = new Date().toLocaleDateString('es-EC', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    $('fechaDia').value = new Date().toISOString().split('T')[0];
+
+    // UPLOAD
+    const uz = $('uploadZone'), fi = $('fileInput');
+    ['dragenter', 'dragover'].forEach(e => uz.addEventListener(e, ev => { ev.preventDefault(); uz.style.borderColor = 'var(--acc)' }));
+    ['dragleave', 'drop'].forEach(e => uz.addEventListener(e, ev => { ev.preventDefault(); uz.style.borderColor = '' }));
+    uz.addEventListener('drop', ev => { if (ev.dataTransfer.files[0]) loadFile(ev.dataTransfer.files[0]) });
+    fi.addEventListener('change', ev => { if (ev.target.files[0]) loadFile(ev.target.files[0]) });
+
+    function loadFile(file) {
+      const r = new FileReader();
+      r.onload = function (e) {
+        try {
+          wb = XLSX.read(e.target.result, { type: 'array' });
+          uz.classList.add('ok'); uz.querySelector('.ico').textContent = '✅';
+          uz.querySelector('h3').textContent = 'Archivo cargado';
+          const fn = $('fileName'); fn.textContent = file.name; fn.classList.remove('hid');
+          initApp();
+        } catch (err) { toast('Error: ' + err.message, 1) }
+      };
+      r.readAsArrayBuffer(file);
+    }
+
+    function initApp() {
+      const ws = wb.Sheets['Hoja 1'];
+      if (!ws) { toast('No se encontró "Hoja 1"', 1); return }
+      const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      const asesores = new Set();
+      json.forEach(row => { const a = fv(row, ['ASESOR', 'Asesor']); if (a && a.trim()) asesores.add(a.trim()) });
+      const sel = $('selAsesor');
+      sel.innerHTML = '<option value="">— Seleccionar asesor —</option>';
+      [...asesores].sort().forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o) });
+      show('modeSection'); setMode('asesor');
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.mode === m));
+      ['cfgAsesor', 'cfgDia', 'dashSection', 'pendSection', 'califSection', 'obsSection', 'dropiSection', 'provSection', 'prodSection', 'btnGen'].forEach(hide);
+      if (m === 'asesor') { show('cfgAsesor') } else { show('cfgDia'); setTimeout(buildReportDia, 50) }
+    }
+
+    $('selAsesor').addEventListener('change', () => { if ($('selAsesor').value) buildReport() });
+    document.querySelector('[data-mode="dia"]').addEventListener('click', () => setTimeout(buildReportDia, 100));
+
+    // ========== REPORT: ASESOR ==========
+    function buildReport() {
+      const asesor = $('selAsesor').value;
+      if (!asesor) return;
+      const json = XLSX.utils.sheet_to_json(wb.Sheets['Hoja 1'], { defval: '' });
+      const rows = json.filter(r => String(fv(r, ['ASESOR', 'Asesor']) || '').trim() === asesor);
+      if (!rows.length) { toast('Sin datos para ' + asesor, 1); return }
+
+      const counts = { CONFIRMADO: 0, PENDIENTE: 0, CANCELADO: 0, REAGENDADO: 0 };
+      const califs = {}, obsMap = {}, pendObs = {};
+
+      rows.forEach(r => {
+        const est = String(fv(r, ['ESTADO']) || '').trim().toUpperCase();
+        if (counts.hasOwnProperty(est)) counts[est]++;
+        const cal = String(fv(r, ['CALIFICAC', 'CALIFIC']) || '').trim();
+        if (cal) califs[cal] = (califs[cal] || 0) + 1;
+        const ob = String(fv(r, ['OBSERVAC']) || '').trim();
+        if (ob) obsMap[ob] = (obsMap[ob] || 0) + 1;
+        if (est === 'PENDIENTE') { const k = ob || cal || 'Sin detalle'; pendObs[k] = (pendObs[k] || 0) + 1 }
+      });
+
+      const total = rows.length;
+      const tasa = total > 0 ? (counts.CONFIRMADO / total * 100) : 0;
+      report = {
+        mode: 'asesor', asesor, total, counts, califs, obsMap, pendObs, tasa,
+        turnoDesde: $('turnoDesde').value, turnoHasta: $('turnoHasta').value,
+        nombre: $('nombreAsesor').value || asesor, obs: $('txtObs').value
+      };
+
+      renderDash(asesor, total, counts, tasa);
+      renderBk('pendBreakdown', pendObs, counts.PENDIENTE, 'var(--org)');
+      renderBk('califBreakdown', califs, total, 'var(--pur)');
+      renderBk('obsBreakdown', obsMap, total, 'var(--red)');
+      ['dashSection', 'pendSection', 'califSection', 'obsSection', 'btnGen'].forEach(show);
+      ['dropiSection', 'provSection', 'prodSection'].forEach(hide);
+    }
+
+    // ========== REPORT: DIA ==========
+    function buildReportDia() {
+      const ws = wb.Sheets['LIMPIEZA DE DATOS'];
+      if (!ws) { toast('No se encontró "LIMPIEZA DE DATOS"', 1); return }
+      const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+      const counts = { CONFIRMADO: 0, PENDIENTE: 0, CANCELADO: 0, REAGENDADO: 0 };
+      const califs = {}, obsMap = {}, pendObs = {}, dropi = {}, provs = {}, prods = {};
+
+      json.forEach(r => {
+        const est = String(fv(r, ['ESTADO']) || '').trim().toUpperCase();
+        if (counts.hasOwnProperty(est)) counts[est]++;
+        const cal = String(fv(r, ['CALIFICAC', 'CALIFIC']) || '').trim();
+        if (cal) califs[cal] = (califs[cal] || 0) + 1;
+        const ob = String(fv(r, ['OBSERVAC']) || '').trim();
+        if (ob) obsMap[ob] = (obsMap[ob] || 0) + 1;
+        if (est === 'PENDIENTE') { pendObs[ob || cal || 'Sin detalle'] = (pendObs[ob || cal || 'Sin detalle'] || 0) + 1 }
+        const dr = String(fv(r, ['DROPI']) || '').trim();
+        if (dr && dr !== '#N/A' && dr !== '') dropi[dr] = (dropi[dr] || 0) + 1;
+        const pv = String(fv(r, ['PROVINCIA']) || '').trim();
+        if (pv) provs[pv] = (provs[pv] || 0) + 1;
+        const pd = String(fv(r, ['PRODUCTO']) || '').trim();
+        if (pd && pd !== '#N/A' && pd !== '') {
+          if (!prods[pd]) prods[pd] = { total: 0, conf: 0 };
+          prods[pd].total++;
+          if (est === 'CONFIRMADO') prods[pd].conf++;
+        }
+      });
+
+      const total = json.filter(r => String(fv(r, ['ESTADO']) || '').trim()).length;
+      const tasa = total > 0 ? (counts.CONFIRMADO / total * 100) : 0;
+      report = {
+        mode: 'dia', total, counts, califs, obsMap, pendObs, dropi, provs, prods, tasa,
+        fecha: $('fechaDia').value, supervisor: $('supervisor').value, obs: $('txtObsDia').value
+      };
+
+      renderDash('Reporte General del Día', total, counts, tasa);
+      renderBk('pendBreakdown', pendObs, counts.PENDIENTE, 'var(--org)');
+      renderBk('califBreakdown', califs, total, 'var(--pur)');
+      renderBk('obsBreakdown', obsMap, total, 'var(--red)');
+      renderBk('dropiBreakdown', dropi, sum(dropi), 'var(--acc)');
+      renderBk('provBreakdown', provs, total, 'var(--grn)');
+      renderProds('prodBreakdown', prods);
+      ['dashSection', 'pendSection', 'califSection', 'obsSection', 'dropiSection', 'provSection', 'prodSection', 'btnGen'].forEach(show);
+    }
+
+    // ========== RENDERS ==========
+    function renderDash(title, total, counts, tasa) {
+      $('dashTitle').textContent = title + ' (' + total + ' pedidos)';
+      const pct = n => total > 0 ? (n / total * 100).toFixed(1) + '%' : '0%';
+      anim('sConf', counts.CONFIRMADO); $('sConfP').textContent = pct(counts.CONFIRMADO);
+      anim('sPend', counts.PENDIENTE); $('sPendP').textContent = pct(counts.PENDIENTE);
+      anim('sCanc', counts.CANCELADO); $('sCancP').textContent = pct(counts.CANCELADO);
+      anim('sReag', counts.REAGENDADO); $('sReagP').textContent = pct(counts.REAGENDADO);
+      setTimeout(() => { $('effFill').style.width = tasa + '%'; $('effVal').textContent = tasa.toFixed(1) + '%' }, 200);
+    }
+
+    function renderBk(id, dataMap, totalRef, color) {
+      const el = $(id);
+      const sorted = Object.entries(dataMap).sort((a, b) => b[1] - a[1]);
+      if (!sorted.length) { el.innerHTML = '<div style="color:var(--mute);font-size:12px;padding:8px">Sin datos</div>'; return }
+      el.innerHTML = '<div class="bk-grid">' + sorted.map(([label, count]) => {
+        const pct = totalRef > 0 ? (count / totalRef * 100) : 0;
+        return `<div class="bk-item">
       <span class="bk-lab">${esc(label)}</span>
       <div class="bk-bar"><div class="bk-bar-fill" style="width:${pct}%;background:${color}"></div></div>
       <span class="bk-val" style="color:${color}">${count}</span>
       <span class="bk-pct">${pct.toFixed(1)}%</span>
-    </div>`}).join('')+'</div>';
-}
+    </div>`}).join('') + '</div>';
+    }
 
-function renderProds(id,prodsMap){
-  const el=$(id);
-  const sorted=Object.entries(prodsMap).sort((a,b)=>b[1].total-a[1].total);
-  if(!sorted.length){el.innerHTML='<div style="color:var(--mute);font-size:12px;padding:8px">Sin datos</div>';return}
-  el.innerHTML='<div class="bk-grid">'+sorted.map(([label,d])=>{
-    const pct=d.total>0?(d.conf/d.total*100):0;
-    const barColor=pct>=70?'var(--grn)':pct>=40?'var(--org)':'var(--red)';
-    return `<div class="bk-item">
+    function renderProds(id, prodsMap) {
+      const el = $(id);
+      const sorted = Object.entries(prodsMap).sort((a, b) => b[1].total - a[1].total);
+      if (!sorted.length) { el.innerHTML = '<div style="color:var(--mute);font-size:12px;padding:8px">Sin datos</div>'; return }
+      el.innerHTML = '<div class="bk-grid">' + sorted.map(([label, d]) => {
+        const pct = d.total > 0 ? (d.conf / d.total * 100) : 0;
+        const barColor = pct >= 70 ? 'var(--grn)' : pct >= 40 ? 'var(--org)' : 'var(--red)';
+        return `<div class="bk-item">
       <span class="bk-lab">${esc(label)}</span>
       <div class="bk-bar"><div class="bk-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
       <span class="bk-val" style="color:var(--pur)">${d.conf}/${d.total}</span>
       <span class="bk-pct" style="color:${barColor}">${pct.toFixed(1)}%</span>
-    </div>`}).join('')+'</div>';
-}
-
-function anim(id,target){const el=$(id);let c=0;const s=Math.max(1,Math.ceil(target/18));
-  const t=setInterval(()=>{c+=s;if(c>=target){c=target;clearInterval(t)}el.textContent=c},25)}
-
-// ========== PDF ==========
-function generarPDF(){
-  // Re-read form values into report
-  if(report.mode==='asesor'){
-    report.turnoDesde=$('turnoDesde').value;report.turnoHasta=$('turnoHasta').value;
-    report.nombre=$('nombreAsesor').value||report.asesor;report.obs=$('txtObs').value;
-  }else{
-    report.fecha=$('fechaDia').value;report.supervisor=$('supervisor').value;report.obs=$('txtObsDia').value;
-  }
-
-  const{jsPDF}=window.jspdf;
-  const pdf=new jsPDF('p','mm','a4');
-  const W=210,M=14;let y=0;
-
-  // COLORS
-  const cBg=[11,15,20],cAcc=[76,154,255],cGrn=[52,211,153],cOrg=[210,153,34],cRed=[220,80,70],cPur=[139,92,246],cDim=[126,138,154];
-
-  const chk=(n)=>{if(y+n>275){pdf.addPage();y=16;return true}return false};
-
-  // ===== HEADER =====
-  pdf.setFillColor(...cBg);pdf.rect(0,0,W,40,'F');
-  pdf.setFillColor(...cAcc);pdf.rect(0,40,W,1.5,'F');
-  pdf.setTextColor(226,232,240);pdf.setFontSize(18);pdf.setFont('helvetica','bold');
-  if(report.mode==='asesor'){
-    pdf.text('REPORTE DE GESTIÓN',M,17);
-    pdf.setFontSize(13);pdf.setTextColor(...cAcc);
-    pdf.text('Asesor: '+report.nombre.toUpperCase(),M,26);
-  }else{
-    pdf.text('REPORTE GENERAL DEL DÍA',M,17);
-    pdf.setFontSize(13);pdf.setTextColor(...cAcc);
-    pdf.text('Importadora Bella',M,26);
-  }
-  pdf.setFontSize(9);pdf.setTextColor(...cDim);
-  pdf.text('Generado: '+new Date().toLocaleDateString('es-EC',{weekday:'long',day:'numeric',month:'long',year:'numeric'}),M,34);
-  y=50;
-
-  // ===== INFO =====
-  pdf.setTextColor(40,50,65);pdf.setFontSize(9);
-  if(report.mode==='asesor'){
-    bld(pdf,'ASESOR:',M,y);nrm(pdf,report.nombre,M+24,y);
-    bld(pdf,'TURNO:',110,y);nrm(pdf,report.turnoDesde+' — '+report.turnoHasta,130,y);y+=7;
-    bld(pdf,'TOTAL PEDIDOS:',M,y);nrm(pdf,String(report.total),M+36,y);
-    bld(pdf,'FECHA:',110,y);nrm(pdf,new Date().toLocaleDateString('es-EC'),130,y);
-  }else{
-    bld(pdf,'FECHA:',M,y);nrm(pdf,report.fecha||'—',M+20,y);
-    bld(pdf,'SUPERVISOR:',110,y);nrm(pdf,report.supervisor||'—',140,y);y+=7;
-    bld(pdf,'TOTAL PEDIDOS:',M,y);nrm(pdf,String(report.total),M+36,y);
-  }
-  y+=12;
-  pdf.setDrawColor(50,55,65);pdf.line(M,y,W-M,y);y+=8;
-
-  // ===== MAIN 4 BOXES =====
-  secTitle(pdf,'DESGLOSE PRINCIPAL DE GESTIÓN',cAcc);
-  const stats=[
-    {l:'CONFIRMADOS',v:report.counts.CONFIRMADO,c:cGrn},
-    {l:'PENDIENTES',v:report.counts.PENDIENTE,c:cOrg},
-    {l:'CANCELADOS',v:report.counts.CANCELADO,c:cRed},
-    {l:'REAGENDADOS',v:report.counts.REAGENDADO,c:cPur}
-  ];
-  const bw=(W-2*M-12)/4;
-  stats.forEach((s,i)=>{
-    const bx=M+i*(bw+4);
-    pdf.setFillColor(...s.c);pdf.rect(bx,y,bw,2.5,'F');
-    pdf.setFillColor(240,241,243);pdf.rect(bx,y+2.5,bw,24,'F');
-    pdf.setTextColor(...s.c);pdf.setFontSize(20);pdf.setFont('helvetica','bold');
-    pdf.text(String(s.v),bx+bw/2,y+15,{align:'center'});
-    const p=report.total>0?(s.v/report.total*100).toFixed(1)+'%':'0%';
-    pdf.setFontSize(9);pdf.setTextColor(100);pdf.setFont('helvetica','normal');
-    pdf.text(p,bx+bw/2,y+21,{align:'center'});
-    pdf.setFontSize(7);pdf.setTextColor(80);pdf.setFont('helvetica','bold');
-    pdf.text(s.l,bx+bw/2,y+29,{align:'center'});
-  });
-  y+=36;
-
-  // Effectiveness
-  pdf.setFillColor(...cBg);pdf.rect(M,y,W-2*M,11,'F');
-  pdf.setTextColor(200);pdf.setFontSize(9);pdf.setFont('helvetica','bold');
-  pdf.text('TASA DE EFECTIVIDAD',M+5,y+7.5);
-  pdf.setTextColor(...cGrn);pdf.setFontSize(14);
-  pdf.text(report.tasa.toFixed(1)+'%',W-M-5,y+8,{align:'right'});
-  const ebx=M+55,ebw=75;
-  pdf.setFillColor(40,50,65);pdf.rect(ebx,y+4,ebw,3,'F');
-  pdf.setFillColor(...cGrn);pdf.rect(ebx,y+4,ebw*(report.tasa/100),3,'F');
-  y+=19;
-
-  // ===== PENDIENTES DETAIL =====
-  if(report.counts.PENDIENTE>0){
-    secTitle(pdf,'DETALLE DE PENDIENTES — ¿QUÉ PASÓ CON CADA UNO?',cOrg);
-    pdfTable(pdf,report.pendObs,report.counts.PENDIENTE,cOrg);
-  }
-
-  // ===== CALIFICACIONES =====
-  secTitle(pdf,'CALIFICACIONES DE CLIENTES',cPur);
-  pdfTable(pdf,report.califs,report.total,cPur);
-
-  // ===== OBSERVACIONES =====
-  secTitle(pdf,'RESULTADO DE GESTIÓN (OBSERVACIONES)',cRed);
-  pdfTable(pdf,report.obsMap,report.total,cRed);
-
-  // ===== DIA-ONLY =====
-  if(report.mode==='dia'){
-    if(report.dropi&&Object.keys(report.dropi).length){
-      secTitle(pdf,'ESTADO LOGÍSTICO — DROPI',cAcc);
-      pdfTable(pdf,report.dropi,sum(report.dropi),cAcc);
+    </div>`}).join('') + '</div>';
     }
-    if(report.provs&&Object.keys(report.provs).length){
-      secTitle(pdf,'DISTRIBUCIÓN POR PROVINCIA',cGrn);
-      pdfTable(pdf,report.provs,report.total,cGrn);
-    }
-    if(report.prods&&Object.keys(report.prods).length){
-      secTitle(pdf,'PRODUCTOS — % DE CONFIRMACIÓN POR PRODUCTO',cPur);
-      pdfTableProds(pdf,report.prods,cPur);
-    }
-  }
 
-  // ===== OBSERVACIONES ESCRITAS =====
-  chk(30);
-  secTitle(pdf,'NOTAS Y OBSERVACIONES DEL OPERADOR',[100,110,125]);
-  const obsT=report.obs||'Sin novedades.';
-  const oLines=pdf.splitTextToSize(obsT,W-2*M-8);
-  pdf.setFillColor(245,246,248);pdf.rect(M,y,W-2*M,oLines.length*5+8,'F');
-  pdf.setTextColor(70,80,90);pdf.setFont('helvetica','normal');pdf.setFontSize(9);
-  pdf.text(oLines,M+4,y+6);y+=oLines.length*5+14;
+    function anim(id, target) {
+      const el = $(id); let c = 0; const s = Math.max(1, Math.ceil(target / 18));
+      const t = setInterval(() => { c += s; if (c >= target) { c = target; clearInterval(t) } el.textContent = c }, 25)
+    }
 
-  // ===== RESUMEN EJECUTIVO =====
-  chk(40);
-  secTitle(pdf,'RESUMEN EJECUTIVO — LO QUE PASÓ HOY',cBg);
-  pdf.setFontSize(9);pdf.setFont('helvetica','normal');pdf.setTextColor(50,60,70);
-  const rl=[];
-  rl.push('De un total de '+report.total+' pedidos gestionados en el turno:');rl.push('');
-  stats.forEach(s=>{
-    const p=report.total>0?(s.v/report.total*100).toFixed(1):0;
-    rl.push('    '+s.l+':  '+s.v+' pedidos  ('+p+'% del total)');
-  });
-  rl.push('');
-  rl.push('La tasa de efectividad (pedidos confirmados vs total) fue del '+report.tasa.toFixed(1)+'%.');
-  if(report.counts.PENDIENTE>0){
-    const tp=Object.entries(report.pendObs).sort((a,b)=>b[1]-a[1]);
-    if(tp.length){
-      rl.push('');rl.push('Razones principales de los '+report.counts.PENDIENTE+' pendientes:');
-      tp.slice(0,3).forEach(([k,v])=>{
-        const pp=(v/report.counts.PENDIENTE*100).toFixed(1);
-        rl.push('    - '+k+': '+v+' casos ('+pp+'%)');
+    // ========== PDF ==========
+    function generarPDF() {
+      // Re-read form values into report
+      if (report.mode === 'asesor') {
+        report.turnoDesde = $('turnoDesde').value; report.turnoHasta = $('turnoHasta').value;
+        report.nombre = $('nombreAsesor').value || report.asesor; report.obs = $('txtObs').value;
+      } else {
+        report.fecha = $('fechaDia').value; report.supervisor = $('supervisor').value; report.obs = $('txtObsDia').value;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const W = 210, M = 14; let y = 0;
+
+      // COLORS
+      const cBg = [11, 15, 20], cAcc = [76, 154, 255], cGrn = [52, 211, 153], cOrg = [210, 153, 34], cRed = [220, 80, 70], cPur = [139, 92, 246], cDim = [126, 138, 154];
+
+      const chk = (n) => { if (y + n > 275) { pdf.addPage(); y = 16; return true } return false };
+
+      // ===== HEADER =====
+      pdf.setFillColor(...cBg); pdf.rect(0, 0, W, 40, 'F');
+      pdf.setFillColor(...cAcc); pdf.rect(0, 40, W, 1.5, 'F');
+      pdf.setTextColor(226, 232, 240); pdf.setFontSize(18); pdf.setFont('helvetica', 'bold');
+      if (report.mode === 'asesor') {
+        pdf.text('REPORTE DE GESTIÓN', M, 17);
+        pdf.setFontSize(13); pdf.setTextColor(...cAcc);
+        pdf.text('Asesor: ' + report.nombre.toUpperCase(), M, 26);
+      } else {
+        pdf.text('REPORTE GENERAL DEL DÍA', M, 17);
+        pdf.setFontSize(13); pdf.setTextColor(...cAcc);
+        pdf.text('Importadora Bella', M, 26);
+      }
+      pdf.setFontSize(9); pdf.setTextColor(...cDim);
+      pdf.text('Generado: ' + new Date().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), M, 34);
+      y = 50;
+
+      // ===== INFO =====
+      pdf.setTextColor(40, 50, 65); pdf.setFontSize(9);
+      if (report.mode === 'asesor') {
+        bld(pdf, 'ASESOR:', M, y); nrm(pdf, report.nombre, M + 24, y);
+        bld(pdf, 'TURNO:', 110, y); nrm(pdf, report.turnoDesde + ' — ' + report.turnoHasta, 130, y); y += 7;
+        bld(pdf, 'TOTAL PEDIDOS:', M, y); nrm(pdf, String(report.total), M + 36, y);
+        bld(pdf, 'FECHA:', 110, y); nrm(pdf, new Date().toLocaleDateString('es-EC'), 130, y);
+      } else {
+        bld(pdf, 'FECHA:', M, y); nrm(pdf, report.fecha || '—', M + 20, y);
+        bld(pdf, 'SUPERVISOR:', 110, y); nrm(pdf, report.supervisor || '—', 140, y); y += 7;
+        bld(pdf, 'TOTAL PEDIDOS:', M, y); nrm(pdf, String(report.total), M + 36, y);
+      }
+      y += 12;
+      pdf.setDrawColor(50, 55, 65); pdf.line(M, y, W - M, y); y += 8;
+
+      // ===== MAIN 4 BOXES =====
+      secTitle(pdf, 'DESGLOSE PRINCIPAL DE GESTIÓN', cAcc);
+      const stats = [
+        { l: 'CONFIRMADOS', v: report.counts.CONFIRMADO, c: cGrn },
+        { l: 'PENDIENTES', v: report.counts.PENDIENTE, c: cOrg },
+        { l: 'CANCELADOS', v: report.counts.CANCELADO, c: cRed },
+        { l: 'REAGENDADOS', v: report.counts.REAGENDADO, c: cPur }
+      ];
+      const bw = (W - 2 * M - 12) / 4;
+      stats.forEach((s, i) => {
+        const bx = M + i * (bw + 4);
+        pdf.setFillColor(...s.c); pdf.rect(bx, y, bw, 2.5, 'F');
+        pdf.setFillColor(240, 241, 243); pdf.rect(bx, y + 2.5, bw, 24, 'F');
+        pdf.setTextColor(...s.c); pdf.setFontSize(20); pdf.setFont('helvetica', 'bold');
+        pdf.text(String(s.v), bx + bw / 2, y + 15, { align: 'center' });
+        const p = report.total > 0 ? (s.v / report.total * 100).toFixed(1) + '%' : '0%';
+        pdf.setFontSize(9); pdf.setTextColor(100); pdf.setFont('helvetica', 'normal');
+        pdf.text(p, bx + bw / 2, y + 21, { align: 'center' });
+        pdf.setFontSize(7); pdf.setTextColor(80); pdf.setFont('helvetica', 'bold');
+        pdf.text(s.l, bx + bw / 2, y + 29, { align: 'center' });
       });
+      y += 36;
+
+      // Effectiveness
+      pdf.setFillColor(...cBg); pdf.rect(M, y, W - 2 * M, 11, 'F');
+      pdf.setTextColor(200); pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+      pdf.text('TASA DE EFECTIVIDAD', M + 5, y + 7.5);
+      pdf.setTextColor(...cGrn); pdf.setFontSize(14);
+      pdf.text(report.tasa.toFixed(1) + '%', W - M - 5, y + 8, { align: 'right' });
+      const ebx = M + 55, ebw = 75;
+      pdf.setFillColor(40, 50, 65); pdf.rect(ebx, y + 4, ebw, 3, 'F');
+      pdf.setFillColor(...cGrn); pdf.rect(ebx, y + 4, ebw * (report.tasa / 100), 3, 'F');
+      y += 19;
+
+      // ===== PENDIENTES DETAIL =====
+      if (report.counts.PENDIENTE > 0) {
+        secTitle(pdf, 'DETALLE DE PENDIENTES — ¿QUÉ PASÓ CON CADA UNO?', cOrg);
+        pdfTable(pdf, report.pendObs, report.counts.PENDIENTE, cOrg);
+      }
+
+      // ===== CALIFICACIONES =====
+      secTitle(pdf, 'CALIFICACIONES DE CLIENTES', cPur);
+      pdfTable(pdf, report.califs, report.total, cPur);
+
+      // ===== OBSERVACIONES =====
+      secTitle(pdf, 'RESULTADO DE GESTIÓN (OBSERVACIONES)', cRed);
+      pdfTable(pdf, report.obsMap, report.total, cRed);
+
+      // ===== DIA-ONLY =====
+      if (report.mode === 'dia') {
+        if (report.dropi && Object.keys(report.dropi).length) {
+          secTitle(pdf, 'ESTADO LOGÍSTICO — DROPI', cAcc);
+          pdfTable(pdf, report.dropi, sum(report.dropi), cAcc);
+        }
+        if (report.provs && Object.keys(report.provs).length) {
+          secTitle(pdf, 'DISTRIBUCIÓN POR PROVINCIA', cGrn);
+          pdfTable(pdf, report.provs, report.total, cGrn);
+        }
+        if (report.prods && Object.keys(report.prods).length) {
+          secTitle(pdf, 'PRODUCTOS — % DE CONFIRMACIÓN POR PRODUCTO', cPur);
+          pdfTableProds(pdf, report.prods, cPur);
+        }
+      }
+
+      // ===== OBSERVACIONES ESCRITAS =====
+      chk(30);
+      secTitle(pdf, 'NOTAS Y OBSERVACIONES DEL OPERADOR', [100, 110, 125]);
+      const obsT = report.obs || 'Sin novedades.';
+      const oLines = pdf.splitTextToSize(obsT, W - 2 * M - 8);
+      pdf.setFillColor(245, 246, 248); pdf.rect(M, y, W - 2 * M, oLines.length * 5 + 8, 'F');
+      pdf.setTextColor(70, 80, 90); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
+      pdf.text(oLines, M + 4, y + 6); y += oLines.length * 5 + 14;
+
+      // ===== RESUMEN EJECUTIVO =====
+      chk(40);
+      secTitle(pdf, 'RESUMEN EJECUTIVO — LO QUE PASÓ HOY', cBg);
+      pdf.setFontSize(9); pdf.setFont('helvetica', 'normal'); pdf.setTextColor(50, 60, 70);
+      const rl = [];
+      rl.push('De un total de ' + report.total + ' pedidos gestionados en el turno:'); rl.push('');
+      stats.forEach(s => {
+        const p = report.total > 0 ? (s.v / report.total * 100).toFixed(1) : 0;
+        rl.push('    ' + s.l + ':  ' + s.v + ' pedidos  (' + p + '% del total)');
+      });
+      rl.push('');
+      rl.push('La tasa de efectividad (pedidos confirmados vs total) fue del ' + report.tasa.toFixed(1) + '%.');
+      if (report.counts.PENDIENTE > 0) {
+        const tp = Object.entries(report.pendObs).sort((a, b) => b[1] - a[1]);
+        if (tp.length) {
+          rl.push(''); rl.push('Razones principales de los ' + report.counts.PENDIENTE + ' pendientes:');
+          tp.slice(0, 3).forEach(([k, v]) => {
+            const pp = (v / report.counts.PENDIENTE * 100).toFixed(1);
+            rl.push('    - ' + k + ': ' + v + ' casos (' + pp + '%)');
+          });
+        }
+      }
+      const tc = Object.entries(report.califs).sort((a, b) => b[1] - a[1]);
+      if (tc.length) {
+        rl.push(''); rl.push('Calificación predominante: "' + tc[0][0] + '" con ' + tc[0][1] + ' casos (' + (tc[0][1] / report.total * 100).toFixed(1) + '%).');
+      }
+
+      rl.forEach(l => { chk(6); pdf.text(l, M + 2, y); y += 5 });
+      y += 8;
+
+      // ===== FOOTER =====
+      const pgs = pdf.internal.getNumberOfPages();
+      for (let p = 1; p <= pgs; p++) {
+        pdf.setPage(p); pdf.setFontSize(7); pdf.setTextColor(140); pdf.setFont('helvetica', 'italic');
+        pdf.text('Importadora Bella — Reporte generado automáticamente', W / 2, 290, { align: 'center' });
+        pdf.text('Pág. ' + p + '/' + pgs, W - M, 290, { align: 'right' });
+      }
+
+      const sn = report.mode === 'asesor' ? (report.asesor || 'Asesor').replace(/[^a-zA-Z0-9]/g, '_') : 'Dia';
+      pdf.save('Reporte_' + sn + '_' + new Date().toLocaleDateString('es-EC').replace(/\//g, '-') + '.pdf');
+      toast('✅ PDF descargado');
+
+      // --- PDF HELPERS (closure) ---
+      function secTitle(p, text, rgb) {
+        chk(16);
+        p.setFillColor(rgb[0], rgb[1], rgb[2]); p.rect(M, y, 3, 8, 'F');
+        p.setTextColor(30, 40, 55); p.setFontSize(10); p.setFont('helvetica', 'bold');
+        p.text(text, M + 7, y + 6); y += 14;
+      }
+
+      function pdfTable(p, dataMap, totalRef, rgb) {
+        const sorted = Object.entries(dataMap).sort((a, b) => b[1] - a[1]);
+        if (!sorted.length) { p.setTextColor(140); p.setFontSize(9); p.text('Sin datos', M + 4, y); y += 8; return }
+
+        // Header
+        p.setFillColor(20, 26, 34); p.rect(M, y, W - 2 * M, 8, 'F');
+        p.setTextColor(200); p.setFontSize(7.5); p.setFont('helvetica', 'bold');
+        p.text('CATEGORÍA', M + 3, y + 5.5);
+        p.text('CANT.', W - M - 48, y + 5.5);
+        p.text('PORCENTAJE', W - M - 30, y + 5.5); y += 8;
+
+        sorted.forEach(([label, count], i) => {
+          chk(8);
+          const pct = totalRef > 0 ? (count / totalRef * 100) : 0;
+          if (i % 2 === 0) { p.setFillColor(245, 246, 248); p.rect(M, y, W - 2 * M, 7.5, 'F') }
+          p.setTextColor(60, 70, 80); p.setFont('helvetica', 'normal'); p.setFontSize(8);
+          const dl = label.length > 55 ? label.substring(0, 55) + '...' : label;
+          p.text(dl, M + 3, y + 5.2);
+
+          p.setFont('helvetica', 'bold'); p.setTextColor(rgb[0], rgb[1], rgb[2]);
+          p.text(String(count), W - M - 46, y + 5.2);
+
+          // Bar
+          const bW = 22, bX = W - M - 28;
+          p.setFillColor(230, 232, 235); p.rect(bX, y + 1.5, bW, 3.5, 'F');
+          p.setFillColor(rgb[0], rgb[1], rgb[2]); p.rect(bX, y + 1.5, bW * (pct / 100), 3.5, 'F');
+
+          p.setTextColor(100); p.setFont('helvetica', 'normal'); p.setFontSize(7);
+          p.text(pct.toFixed(1) + '%', bX + bW + 2, y + 5);
+          y += 7.5;
+        });
+        y += 5;
+      }
+
+      function bld(p, t, x, yy) { p.setFont('helvetica', 'bold'); p.setFontSize(9); p.setTextColor(40, 50, 65); p.text(t, x, yy) }
+      function nrm(p, t, x, yy) { p.setFont('helvetica', 'normal'); p.setFontSize(9); p.setTextColor(60, 70, 80); p.text(t || '—', x, yy) }
+
+      function pdfTableProds(p, prodsMap, rgb) {
+        const sorted = Object.entries(prodsMap).sort((a, b) => b[1].total - a[1].total);
+        if (!sorted.length) { p.setTextColor(140); p.setFontSize(9); p.text('Sin datos', M + 4, y); y += 8; return }
+
+        p.setFillColor(20, 26, 34); p.rect(M, y, W - 2 * M, 8, 'F');
+        p.setTextColor(200); p.setFontSize(7.5); p.setFont('helvetica', 'bold');
+        p.text('PRODUCTO', M + 3, y + 5.5);
+        p.text('CONF/TOTAL', W - M - 55, y + 5.5);
+        p.text('% CONFIRMACIÓN', W - M - 32, y + 5.5); y += 8;
+
+        sorted.forEach(([label, d], i) => {
+          chk(8);
+          const pct = d.total > 0 ? (d.conf / d.total * 100) : 0;
+          const cBar = pct >= 70 ? cGrn : pct >= 40 ? cOrg : cRed;
+          if (i % 2 === 0) { p.setFillColor(245, 246, 248); p.rect(M, y, W - 2 * M, 7.5, 'F') }
+          p.setTextColor(60, 70, 80); p.setFont('helvetica', 'normal'); p.setFontSize(8);
+          const dl = label.length > 45 ? label.substring(0, 45) + '...' : label;
+          p.text(dl, M + 3, y + 5.2);
+
+          p.setFont('helvetica', 'bold'); p.setTextColor(rgb[0], rgb[1], rgb[2]);
+          p.text(d.conf + '/' + d.total, W - M - 53, y + 5.2);
+
+          const bW = 22, bX = W - M - 30;
+          p.setFillColor(230, 232, 235); p.rect(bX, y + 1.5, bW, 3.5, 'F');
+          p.setFillColor(cBar[0], cBar[1], cBar[2]); p.rect(bX, y + 1.5, bW * (pct / 100), 3.5, 'F');
+
+          p.setTextColor(cBar[0], cBar[1], cBar[2]); p.setFont('helvetica', 'bold'); p.setFontSize(7);
+          p.text(pct.toFixed(1) + '%', bX + bW + 2, y + 5);
+          y += 7.5;
+        });
+        y += 5;
+      }
     }
-  }
-  const tc=Object.entries(report.califs).sort((a,b)=>b[1]-a[1]);
-  if(tc.length){
-    rl.push('');rl.push('Calificación predominante: "'+tc[0][0]+'" con '+tc[0][1]+' casos ('+(tc[0][1]/report.total*100).toFixed(1)+'%).');
-  }
 
-  rl.forEach(l=>{chk(6);pdf.text(l,M+2,y);y+=5});
-  y+=8;
-
-  // ===== FOOTER =====
-  const pgs=pdf.internal.getNumberOfPages();
-  for(let p=1;p<=pgs;p++){
-    pdf.setPage(p);pdf.setFontSize(7);pdf.setTextColor(140);pdf.setFont('helvetica','italic');
-    pdf.text('Importadora Bella — Reporte generado automáticamente',W/2,290,{align:'center'});
-    pdf.text('Pág. '+p+'/'+pgs,W-M,290,{align:'right'});
-  }
-
-  const sn=report.mode==='asesor'?(report.asesor||'Asesor').replace(/[^a-zA-Z0-9]/g,'_'):'Dia';
-  pdf.save('Reporte_'+sn+'_'+new Date().toLocaleDateString('es-EC').replace(/\//g,'-')+'.pdf');
-  toast('✅ PDF descargado');
-
-  // --- PDF HELPERS (closure) ---
-  function secTitle(p,text,rgb){
-    chk(16);
-    p.setFillColor(rgb[0],rgb[1],rgb[2]);p.rect(M,y,3,8,'F');
-    p.setTextColor(30,40,55);p.setFontSize(10);p.setFont('helvetica','bold');
-    p.text(text,M+7,y+6);y+=14;
-  }
-
-  function pdfTable(p,dataMap,totalRef,rgb){
-    const sorted=Object.entries(dataMap).sort((a,b)=>b[1]-a[1]);
-    if(!sorted.length){p.setTextColor(140);p.setFontSize(9);p.text('Sin datos',M+4,y);y+=8;return}
-
-    // Header
-    p.setFillColor(20,26,34);p.rect(M,y,W-2*M,8,'F');
-    p.setTextColor(200);p.setFontSize(7.5);p.setFont('helvetica','bold');
-    p.text('CATEGORÍA',M+3,y+5.5);
-    p.text('CANT.',W-M-48,y+5.5);
-    p.text('PORCENTAJE',W-M-30,y+5.5);y+=8;
-
-    sorted.forEach(([label,count],i)=>{
-      chk(8);
-      const pct=totalRef>0?(count/totalRef*100):0;
-      if(i%2===0){p.setFillColor(245,246,248);p.rect(M,y,W-2*M,7.5,'F')}
-      p.setTextColor(60,70,80);p.setFont('helvetica','normal');p.setFontSize(8);
-      const dl=label.length>55?label.substring(0,55)+'...':label;
-      p.text(dl,M+3,y+5.2);
-
-      p.setFont('helvetica','bold');p.setTextColor(rgb[0],rgb[1],rgb[2]);
-      p.text(String(count),W-M-46,y+5.2);
-
-      // Bar
-      const bW=22,bX=W-M-28;
-      p.setFillColor(230,232,235);p.rect(bX,y+1.5,bW,3.5,'F');
-      p.setFillColor(rgb[0],rgb[1],rgb[2]);p.rect(bX,y+1.5,bW*(pct/100),3.5,'F');
-
-      p.setTextColor(100);p.setFont('helvetica','normal');p.setFontSize(7);
-      p.text(pct.toFixed(1)+'%',bX+bW+2,y+5);
-      y+=7.5;
-    });
-    y+=5;
-  }
-
-  function bld(p,t,x,yy){p.setFont('helvetica','bold');p.setFontSize(9);p.setTextColor(40,50,65);p.text(t,x,yy)}
-  function nrm(p,t,x,yy){p.setFont('helvetica','normal');p.setFontSize(9);p.setTextColor(60,70,80);p.text(t||'—',x,yy)}
-
-  function pdfTableProds(p,prodsMap,rgb){
-    const sorted=Object.entries(prodsMap).sort((a,b)=>b[1].total-a[1].total);
-    if(!sorted.length){p.setTextColor(140);p.setFontSize(9);p.text('Sin datos',M+4,y);y+=8;return}
-
-    p.setFillColor(20,26,34);p.rect(M,y,W-2*M,8,'F');
-    p.setTextColor(200);p.setFontSize(7.5);p.setFont('helvetica','bold');
-    p.text('PRODUCTO',M+3,y+5.5);
-    p.text('CONF/TOTAL',W-M-55,y+5.5);
-    p.text('% CONFIRMACIÓN',W-M-32,y+5.5);y+=8;
-
-    sorted.forEach(([label,d],i)=>{
-      chk(8);
-      const pct=d.total>0?(d.conf/d.total*100):0;
-      const cBar=pct>=70?cGrn:pct>=40?cOrg:cRed;
-      if(i%2===0){p.setFillColor(245,246,248);p.rect(M,y,W-2*M,7.5,'F')}
-      p.setTextColor(60,70,80);p.setFont('helvetica','normal');p.setFontSize(8);
-      const dl=label.length>45?label.substring(0,45)+'...':label;
-      p.text(dl,M+3,y+5.2);
-
-      p.setFont('helvetica','bold');p.setTextColor(rgb[0],rgb[1],rgb[2]);
-      p.text(d.conf+'/'+d.total,W-M-53,y+5.2);
-
-      const bW=22,bX=W-M-30;
-      p.setFillColor(230,232,235);p.rect(bX,y+1.5,bW,3.5,'F');
-      p.setFillColor(cBar[0],cBar[1],cBar[2]);p.rect(bX,y+1.5,bW*(pct/100),3.5,'F');
-
-      p.setTextColor(cBar[0],cBar[1],cBar[2]);p.setFont('helvetica','bold');p.setFontSize(7);
-      p.text(pct.toFixed(1)+'%',bX+bW+2,y+5);
-      y+=7.5;
-    });
-    y+=5;
-  }
-}
-
-// ========== UTILS ==========
-function fv(row,cands){
-  const keys=Object.keys(row);
-  for(const c of cands){const k=keys.find(k=>k.toUpperCase().includes(c.toUpperCase()));if(k&&row[k]!=null)return String(row[k])}
-  return '';
-}
-function show(id){$(id).classList.remove('hid')}
-function hide(id){$(id).classList.add('hid')}
-function sum(o){return Object.values(o).reduce((a,b)=>a+b,0)}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-function toast(msg,err){const t=$('toast');t.textContent=msg;t.className='toast'+(err?' err':'');setTimeout(()=>t.classList.add('show'),10);setTimeout(()=>t.classList.remove('show'),3500)}
-</script>
+    // ========== UTILS ==========
+    function fv(row, cands) {
+      const keys = Object.keys(row);
+      for (const c of cands) { const k = keys.find(k => k.toUpperCase().includes(c.toUpperCase())); if (k && row[k] != null) return String(row[k]) }
+      return '';
+    }
+    function show(id) { $(id).classList.remove('hid') }
+    function hide(id) { $(id).classList.add('hid') }
+    function sum(o) { return Object.values(o).reduce((a, b) => a + b, 0) }
+    function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+    function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : ''); setTimeout(() => t.classList.add('show'), 10); setTimeout(() => t.classList.remove('show'), 3500) }
+  </script>
 </body>
+
 </html>
