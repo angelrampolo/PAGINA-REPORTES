@@ -162,19 +162,19 @@
         }
 
         .login-logo {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--acc), var(--pur));
-            border-radius: 18px;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 20px;
-            color: #fff;
-            margin: 0 auto 20px;
-            box-shadow: 0 8px 32px rgba(99, 179, 255, .3);
-            letter-spacing: -1px;
+        }
+
+        .login-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 16px rgba(99, 179, 255, .3));
         }
 
         .login-card h2 {
@@ -312,18 +312,32 @@
         }
 
         .tb-logo {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--acc), var(--pur));
-            border-radius: 12px;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 14px;
-            color: #fff;
-            box-shadow: 0 4px 16px rgba(99, 179, 255, .2);
-            letter-spacing: -0.5px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .tb-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(99, 179, 255, .15));
+        }
+
+        .tb-logo-text {
+            height: 28px;
+        }
+
+        .tb-logo-text img {
+            height: 100%;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 1px 4px rgba(99, 179, 255, .1));
         }
 
         .tb-info h1 {
@@ -769,13 +783,13 @@
 
         .schedule-grid {
             display: grid;
-            grid-template-columns: 64px repeat(7, 1fr);
+            grid-template-columns: 110px repeat(7, 1fr);
             border-radius: var(--r2);
             overflow: hidden;
             border: 1px solid var(--brd);
             background: var(--surf);
             box-shadow: var(--shadow-sm);
-            min-width: 700px;
+            min-width: 800px;
         }
 
         /* Header cells */
@@ -839,19 +853,48 @@
 
         /* Time cells */
         .sg-time {
-            padding: 0 8px;
+            padding: 0 6px;
             text-align: center;
             font-family: var(--f);
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             color: var(--mute);
             border-bottom: 1px solid var(--brd);
             border-right: 1px solid var(--brd);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             background: var(--bg2);
-            letter-spacing: .5px;
+            letter-spacing: .3px;
+            line-height: 1.4;
+            gap: 1px;
+        }
+
+        .sg-time .time-range {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .sg-time .time-start {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--dim);
+        }
+
+        .sg-time .time-sep {
+            font-size: 8px;
+            font-weight: 500;
+            color: var(--mute);
+            text-transform: lowercase;
+        }
+
+        .sg-time .time-end {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--mute);
         }
 
         /* Data cells */
@@ -1011,10 +1054,19 @@
         /* Area selector on click */
         .cell-entry .ce-select {
             position: absolute;
-            inset: 0;
+            top: 0;
+            left: 0;
+            right: 22px;
+            bottom: 0;
             opacity: 0;
             cursor: pointer;
             border-radius: 6px;
+            z-index: 1;
+        }
+
+        .cell-entry .ce-remove {
+            z-index: 2;
+            position: relative;
         }
 
         /* ===== TOAST ===== */
@@ -1091,7 +1143,7 @@
     <!-- ===== LOGIN ===== -->
     <div class="login-overlay" id="loginOverlay">
         <div class="login-card">
-            <div class="login-logo">IB</div>
+            <div class="login-logo"><img src="logo.png" alt="Importadora Bella"></div>
             <h2>Acceso Supervisor</h2>
             <p class="subtitle">Panel de gestión de horarios — Importadora Bella</p>
             <div class="login-field">
@@ -1111,10 +1163,11 @@
     <div class="app" id="mainApp">
         <div class="topbar">
             <div class="tb-brand">
-                <div class="tb-logo">IB</div>
+                <div class="tb-logo"><img src="logo.png" alt="Logo"></div>
+                <div class="tb-logo-text"><img src="logoLetras.png" alt="Importadora Bella"></div>
                 <div class="tb-info">
                     <h1>Gestión de Horarios</h1>
-                    <small>Supervisor — Importadora Bella</small>
+                    <small>Panel de Supervisor</small>
                 </div>
             </div>
             <div class="tb-actions">
@@ -1434,7 +1487,8 @@
             let totalCells = 0;
             for (let h = hourStart; h < hourEnd; h++) {
                 const isEven = (h - hourStart) % 2 === 0;
-                html += `<div class="sg-time">${pad(h)}:00</div>`;
+                const hNext = h + 1;
+                html += `<div class="sg-time"><div class="time-range"><span class="time-start">${h}:00</span><span class="time-sep">a</span><span class="time-end">${hNext}:00</span></div></div>`;
                 for (let di = 0; di < 7; di++) {
                     const key = di + '-' + h;
                     const entries = schedule[key] || [];
@@ -1538,137 +1592,286 @@
         /* ===== PDF EXPORT ===== */
         $('btnPDF').addEventListener('click', exportPDF);
 
+        // Preload logo for PDF — use fetch for file:// compatibility
+        let logoDataUrl = null;
+        (function preloadLogo() {
+            // Method 1: fetch as blob
+            fetch('logo.png').then(r => r.blob()).then(blob => {
+                const reader = new FileReader();
+                reader.onload = () => { logoDataUrl = reader.result; };
+                reader.readAsDataURL(blob);
+            }).catch(() => {
+                // Method 2: fallback with img + canvas
+                const img = new Image();
+                img.onload = function () {
+                    const c = document.createElement('canvas');
+                    c.width = img.naturalWidth; c.height = img.naturalHeight;
+                    c.getContext('2d').drawImage(img, 0, 0);
+                    try { logoDataUrl = c.toDataURL('image/png'); } catch (e) { }
+                };
+                img.src = 'logo.png';
+            });
+        })();
+
         function exportPDF() {
             if (!workers.length) { toast('Agregue al menos un trabajador', true); return; }
             if (!Object.keys(schedule).length) { toast('El horario está vacío', true); return; }
 
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('l', 'mm', 'a4');
-            const W = 297, H = 210, M = 10;
-            let y = 0;
+            const W = 297, H = 210, M = 8;
 
-            const cBg = [5, 8, 13], cSurf = [15, 21, 32], cAcc = [99, 179, 255],
-                cGrn = [74, 222, 128], cDim = [107, 125, 149], cTxt = [232, 237, 245];
+            // ========== DARK COLOR PALETTE ==========
+            const cBg = [10, 15, 25];       // Page background
+            const cBg2 = [15, 22, 35];       // Alternating row
+            const cSurf = [20, 30, 48];       // Cell surface
+            const cSurf2 = [28, 40, 62];       // Header surface
+            const cBrd = [35, 50, 75];       // Borders/lines
+            const cAcc = [99, 179, 255];     // Accent blue
+            const cAccDim = [60, 120, 200];     // Dim accent
+            const cTxt = [230, 235, 245];    // Primary text
+            const cTxt2 = [180, 195, 215];    // Secondary text
+            const cDim = [100, 120, 150];    // Muted text
+            const cMute = [55, 70, 95];       // Very muted
 
-            // Header bar
-            pdf.setFillColor(...cBg); pdf.rect(0, 0, W, 26, 'F');
-            // Gradient accent line
-            pdf.setFillColor(...cAcc); pdf.rect(0, 26, W, 1, 'F');
+            // ========== FULL PAGE DARK BG ==========
+            function fillPageBg() {
+                pdf.setFillColor(...cBg);
+                pdf.rect(0, 0, W, H, 'F');
+            }
+            fillPageBg();
 
-            pdf.setTextColor(...cTxt); pdf.setFontSize(15); pdf.setFont('helvetica', 'bold');
-            pdf.text('HORARIO SEMANAL', M, 12);
-            pdf.setFontSize(9); pdf.setTextColor(...cAcc); pdf.setFont('helvetica', 'normal');
-            pdf.text('IMPORTADORA BELLA', M, 19);
+            // ========== HEADER ==========
+            pdf.setFillColor(...cSurf2);
+            pdf.rect(0, 0, W, 28, 'F');
+            // Accent gradient line
+            pdf.setFillColor(...cAcc);
+            pdf.rect(0, 28, W, 1.2, 'F');
 
-            pdf.setFontSize(8); pdf.setTextColor(...cDim);
-            const dateStr = new Date().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-            pdf.text('Generado: ' + dateStr, W - M, 12, { align: 'right' });
-            pdf.text('Rango horario: ' + pad(hourStart) + ':00 — ' + pad(hourEnd) + ':00', W - M, 19, { align: 'right' });
+            // Logo
+            if (logoDataUrl) {
+                try { pdf.addImage(logoDataUrl, 'PNG', M + 1, 3, 22, 22); } catch (e) { }
+            }
+            const lOff = logoDataUrl ? M + 28 : M;
 
-            y = 32;
+            pdf.setTextColor(...cTxt);
+            pdf.setFontSize(16);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('HORARIO SEMANAL', lOff, 12);
 
-            // Grid layout
-            const timeColW = 18;
-            const colW = (W - 2 * M - timeColW) / 7;
-            const hours = hourEnd - hourStart;
-            const maxRowH = (H - y - 28) / (hours + 1);
-            const rowH = Math.min(11, maxRowH);
+            pdf.setFontSize(9);
+            pdf.setTextColor(...cAcc);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text('IMPORTADORA BELLA', lOff, 20);
 
-            // Day headers
-            pdf.setFillColor(...cSurf); pdf.rect(M, y, W - 2 * M, 7, 'F');
-            pdf.setTextColor(...cAcc); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
-            pdf.text('HORA', M + timeColW / 2, y + 4.8, { align: 'center' });
-            DAYS.forEach((d, i) => {
-                pdf.text(d.toUpperCase(), M + timeColW + i * colW + colW / 2, y + 4.8, { align: 'center' });
+            pdf.setFontSize(8);
+            pdf.setTextColor(...cTxt2);
+            const dateStr = new Date().toLocaleDateString('es-EC', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
             });
-            y += 7;
+            pdf.text('Generado: ' + dateStr, W - M, 12, { align: 'right' });
+            pdf.text('Horario: ' + hourStart + ':00 — ' + hourEnd + ':00', W - M, 20, { align: 'right' });
 
-            // Data rows
+            let y = 33;
+
+            // ========== GRID LAYOUT ==========
+            const timeColW = 22;
+            const colW = (W - 2 * M - timeColW) / 7;
+            const entryItemH = 5.5;  // Fixed height per entry — no cramming
+            const entryGap = 0.6;
+            const minRowH = 9;
+
+            // Pre-calculate row heights based on max entries in any cell for each hour
+            const hours = hourEnd - hourStart;
+            const rowHeights = [];
             for (let h = hourStart; h < hourEnd; h++) {
-                if (y + rowH > H - 14) {
+                let maxEntries = 0;
+                for (let di = 0; di < 7; di++) {
+                    const key = di + '-' + h;
+                    const cnt = (schedule[key] || []).length;
+                    if (cnt > maxEntries) maxEntries = cnt;
+                }
+                const needed = maxEntries > 0
+                    ? Math.max(minRowH, 1.5 + maxEntries * (entryItemH + entryGap) + 0.5)
+                    : minRowH;
+                rowHeights.push(needed);
+            }
+
+            // ========== DAY HEADERS ==========
+            function drawDayHeaders(yPos) {
+                pdf.setFillColor(...cSurf2);
+                pdf.rect(M, yPos, W - 2 * M, 8, 'F');
+                // Bottom border
+                pdf.setDrawColor(...cAcc);
+                pdf.setLineWidth(0.4);
+                pdf.line(M, yPos + 8, W - M, yPos + 8);
+                pdf.setLineWidth(0.15);
+
+                pdf.setTextColor(...cDim);
+                pdf.setFontSize(6.5);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('HORA', M + timeColW / 2, yPos + 5.2, { align: 'center' });
+
+                const dayClr = [
+                    [100, 180, 255], [80, 220, 160], [180, 160, 255],
+                    [255, 180, 100], [255, 130, 155], [255, 200, 80], [255, 200, 80]
+                ];
+                DAYS.forEach((d, i) => {
+                    pdf.setTextColor(...dayClr[i]);
+                    pdf.text(d.toUpperCase(), M + timeColW + i * colW + colW / 2, yPos + 5.2, { align: 'center' });
+                });
+                return yPos + 8;
+            }
+
+            y = drawDayHeaders(y);
+
+            // ========== DATA ROWS ==========
+            for (let hi = 0; hi < hours; hi++) {
+                const h = hourStart + hi;
+                const rowH = rowHeights[hi];
+
+                // Check page break
+                if (y + rowH > H - 12) {
                     pdf.addPage();
-                    y = 12;
+                    fillPageBg();
+                    // Mini header on new page
+                    pdf.setFillColor(...cSurf2);
+                    pdf.rect(0, 0, W, 10, 'F');
+                    pdf.setFillColor(...cAcc);
+                    pdf.rect(0, 10, W, 0.6, 'F');
+                    pdf.setTextColor(...cTxt);
+                    pdf.setFontSize(8);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text('HORARIO SEMANAL — IMPORTADORA BELLA (cont.)', M, 7);
+                    if (logoDataUrl) {
+                        try { pdf.addImage(logoDataUrl, 'PNG', W - M - 8, 1, 8, 8); } catch (e) { }
+                    }
+                    y = 14;
+                    y = drawDayHeaders(y);
                 }
 
-                // Row background
-                const isEven = (h - hourStart) % 2 === 0;
-                if (isEven) {
-                    pdf.setFillColor(248, 249, 251);
-                } else {
-                    pdf.setFillColor(255, 255, 255);
-                }
+                // Row background — alternating dark shades
+                const isEven = hi % 2 === 0;
+                pdf.setFillColor(isEven ? cBg2[0] : cSurf[0], isEven ? cBg2[1] : cSurf[1], isEven ? cBg2[2] : cSurf[2]);
                 pdf.rect(M, y, W - 2 * M, rowH, 'F');
 
                 // Time cell
-                pdf.setDrawColor(220, 225, 231);
+                pdf.setFillColor(...cSurf2);
+                pdf.rect(M, y, timeColW, rowH, 'F');
+                pdf.setDrawColor(...cBrd);
                 pdf.rect(M, y, timeColW, rowH);
-                pdf.setFillColor(240, 242, 246); pdf.rect(M, y, timeColW, rowH, 'F');
-                pdf.setDrawColor(220, 225, 231); pdf.rect(M, y, timeColW, rowH);
-                pdf.setTextColor(100, 110, 125); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'bold');
-                pdf.text(pad(h) + ':00', M + timeColW / 2, y + rowH / 2 + 1.2, { align: 'center' });
+
+                // Time label — "6:00 a 7:00"
+                const hNext = h + 1;
+                pdf.setTextColor(...cTxt);
+                pdf.setFontSize(8);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(h + ':00', M + timeColW / 2, y + rowH / 2 - 1, { align: 'center' });
+                pdf.setFontSize(5.5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setTextColor(...cDim);
+                pdf.text('a ' + hNext + ':00', M + timeColW / 2, y + rowH / 2 + 2, { align: 'center' });
 
                 // Day cells
                 for (let di = 0; di < 7; di++) {
                     const cx = M + timeColW + di * colW;
-                    pdf.setDrawColor(220, 225, 231);
+
+                    // Cell border
+                    pdf.setDrawColor(...cBrd);
                     pdf.rect(cx, y, colW, rowH);
+
+                    // Weekend subtle tint
+                    if (di >= 5) {
+                        pdf.setFillColor(25, 30, 18);
+                        pdf.rect(cx + 0.15, y + 0.15, colW - 0.3, rowH - 0.3, 'F');
+                    }
 
                     const key = di + '-' + h;
                     const entries = schedule[key] || [];
 
-                    if (entries.length > 0) {
-                        const entryH = Math.min(4.5, (rowH - 1.5) / entries.length);
-                        entries.forEach((en, ei) => {
-                            const w = workers.find(ww => ww.id === en.workerId);
-                            if (!w) return;
-                            const area = areas.find(aa => aa.id === en.areaId);
-                            const rgb = hexToRgb(w.color);
-                            const ey = y + 0.8 + ei * (entryH + 0.3);
+                    entries.forEach((en, ei) => {
+                        const w = workers.find(ww => ww.id === en.workerId);
+                        if (!w) return;
+                        const area = areas.find(aa => aa.id === en.areaId);
+                        const rgb = hexToRgb(w.color);
+                        const ey = y + 1 + ei * (entryItemH + entryGap);
 
-                            // Entry background
-                            pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
-                            pdf.roundedRect(cx + 0.8, ey, colW - 1.6, entryH, 1, 1, 'F');
+                        // Colored pill with slight transparency effect
+                        pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
+                        pdf.roundedRect(cx + 1, ey, colW - 2, entryItemH, 1.2, 1.2, 'F');
 
-                            // Entry text
-                            pdf.setTextColor(255, 255, 255); pdf.setFontSize(5.5); pdf.setFont('helvetica', 'bold');
-                            let label = w.name;
-                            if (area) label += ' · ' + area.name;
-                            if (label.length > 24) label = label.substring(0, 22) + '…';
-                            pdf.text(label, cx + 2.5, ey + entryH - 1);
-                        });
-                    }
+                        // White bold text
+                        pdf.setTextColor(255, 255, 255);
+                        pdf.setFontSize(6.5);
+                        pdf.setFont('helvetica', 'bold');
+                        let label = w.name;
+                        if (area) label += ' — ' + area.name;
+                        const maxLen = Math.floor((colW - 5) / 1.7);
+                        if (label.length > maxLen) label = label.substring(0, maxLen - 1) + '…';
+                        pdf.text(label, cx + 3, ey + entryItemH / 2 + 1.2);
+                    });
                 }
+
+                // Row bottom border
+                pdf.setDrawColor(...cBrd);
+                pdf.line(M, y + rowH, W - M, y + rowH);
                 y += rowH;
             }
 
-            // Worker legend
-            y += 6;
-            if (y + 12 > H - 8) { pdf.addPage(); y = 12; }
-            pdf.setFillColor(...cSurf); pdf.rect(M, y, W - 2 * M, 6, 'F');
-            pdf.setTextColor(...cTxt); pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
-            pdf.text('EQUIPO DE TRABAJO', M + 3, y + 4.2);
-            y += 8;
+            // ========== WORKER LEGEND ==========
+            y += 5;
+            if (y + 18 > H - 10) { pdf.addPage(); fillPageBg(); y = 12; }
+
+            // Legend header bar
+            pdf.setFillColor(...cSurf2);
+            pdf.roundedRect(M, y, W - 2 * M, 7, 1.5, 1.5, 'F');
+            pdf.setDrawColor(...cAcc);
+            pdf.setLineWidth(0.3);
+            pdf.line(M, y + 7, W - M, y + 7);
+            pdf.setLineWidth(0.15);
+            pdf.setTextColor(...cTxt);
+            pdf.setFontSize(8);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('EQUIPO DE TRABAJO', M + 4, y + 4.8);
+            y += 10;
 
             const cols = Math.min(5, workers.length);
             const lColW = (W - 2 * M) / cols;
             workers.forEach((w, i) => {
                 const lx = M + (i % cols) * lColW;
-                const ly = y + Math.floor(i / cols) * 5;
-                if (ly + 5 > H - 6) return;
+                const ly = y + Math.floor(i / cols) * 7;
+                if (ly + 7 > H - 8) return;
+
                 const rgb = hexToRgb(w.color);
+                // Colored pill
                 pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
-                pdf.circle(lx + 2.5, ly + 1.5, 1.5, 'F');
-                pdf.setTextColor(60, 70, 85); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'normal');
-                pdf.text(w.name, lx + 6, ly + 2.5);
+                pdf.roundedRect(lx + 1, ly, lColW - 6, 5, 1.2, 1.2, 'F');
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(7.5);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(w.name, lx + 4, ly + 3.5);
             });
 
-            // Footer all pages
+            // ========== FOOTER ALL PAGES ==========
             const pgs = pdf.internal.getNumberOfPages();
             for (let p = 1; p <= pgs; p++) {
                 pdf.setPage(p);
-                pdf.setFontSize(6.5); pdf.setTextColor(160); pdf.setFont('helvetica', 'italic');
-                pdf.text('Importadora Bella — Horario generado automáticamente', W / 2, H - 5, { align: 'center' });
-                pdf.text('Pág. ' + p + '/' + pgs, W - M, H - 5, { align: 'right' });
+
+                // Footer dark bar
+                pdf.setFillColor(...cSurf2);
+                pdf.rect(0, H - 10, W, 10, 'F');
+                pdf.setDrawColor(...cAcc);
+                pdf.setLineWidth(0.3);
+                pdf.line(0, H - 10, W, H - 10);
+                pdf.setLineWidth(0.15);
+
+                pdf.setFontSize(6.5);
+                pdf.setTextColor(...cDim);
+                pdf.setFont('helvetica', 'italic');
+                pdf.text('Importadora Bella — Horario generado automáticamente', M, H - 4.5);
+
+                pdf.setFont('helvetica', 'normal');
+                pdf.text('Pág. ' + p + ' de ' + pgs, W - M, H - 4.5, { align: 'right' });
             }
 
             const fname = 'Horario_Semanal_' + new Date().toLocaleDateString('es-EC').replace(/\//g, '-') + '.pdf';
