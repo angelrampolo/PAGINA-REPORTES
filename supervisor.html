@@ -730,11 +730,11 @@
         }
 
         .gt-group input[type=number],
+        .gt-group input[type=date],
         .gt-group select {
             font-family: var(--f);
             font-size: 13px;
             font-weight: 600;
-            width: 56px;
             padding: 6px 8px;
             background: var(--surf);
             border: 1px solid var(--brd);
@@ -743,6 +743,15 @@
             outline: 0;
             text-align: center;
             transition: all .2s;
+        }
+
+        .gt-group input[type=number] {
+            width: 56px;
+        }
+
+        .gt-group input[type=date] {
+            width: 150px;
+            color-scheme: dark;
         }
 
         .gt-group input:focus,
@@ -783,13 +792,13 @@
 
         .schedule-grid {
             display: grid;
-            grid-template-columns: 110px repeat(7, 1fr);
+            grid-template-columns: 110px repeat(8, 1fr);
             border-radius: var(--r2);
             overflow: hidden;
             border: 1px solid var(--brd);
             background: var(--surf);
             box-shadow: var(--shadow-sm);
-            min-width: 800px;
+            min-width: 900px;
         }
 
         /* Header cells */
@@ -911,7 +920,7 @@
             background: var(--bg2);
         }
 
-        .sg-cell:nth-child(8n) {
+        .sg-cell:nth-child(9n) {
             border-right: none;
         }
 
@@ -1219,9 +1228,13 @@
             <div class="schedule-area">
                 <div class="grid-toolbar">
                     <div class="gt-group">
-                        <label>Desde</label>
+                        <label>Semana del</label>
+                        <input type="date" id="weekStartDate">
+                    </div>
+                    <div class="gt-group">
+                        <label>Hora desde</label>
                         <input type="number" id="hourStart" value="6" min="0" max="23">
-                        <label>Hasta</label>
+                        <label>hasta</label>
                         <input type="number" id="hourEnd" value="22" min="1" max="24">
                         <button class="btn" id="btnApply" style="padding:6px 12px">Aplicar</button>
                     </div>
@@ -1246,15 +1259,55 @@
         let areas = [];
         let schedule = {};
         let hourStart = 6, hourEnd = 22;
+        let weekStartDate = ''; // YYYY-MM-DD of the Sunday that starts the 8-day period
 
-        const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-        const DAY_SHORT = ['Día completo', 'Día completo', 'Día completo', 'Día completo', 'Día completo', 'Fin de semana', 'Fin de semana'];
+        const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const NUM_DAYS = 8; // Domingo a Domingo
         const COLORS = [
             '#63B3FF', '#4ADE80', '#FBBF24', '#FB7185', '#A78BFA', '#F472B6', '#22D3EE',
             '#FB923C', '#818CF8', '#2DD4BF', '#E879F9', '#84CC16', '#34D399', '#F59E0B',
             '#EC4899', '#38BDF8', '#A3E635', '#C084FC'
         ];
         let colorIdx = 0;
+
+        // Get the 8 grid day objects [{name, date, dayNum, monthName, isWeekend, dateStr}]
+        function getGridDays() {
+            const days = [];
+            let start;
+            if (weekStartDate) {
+                const parts = weekStartDate.split('-');
+                start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            } else {
+                // Default: find last Sunday
+                start = new Date();
+                start.setDate(start.getDate() - start.getDay());
+            }
+            for (let i = 0; i < NUM_DAYS; i++) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                const dow = d.getDay(); // 0=Sun
+                days.push({
+                    name: DAY_NAMES[dow],
+                    dayNum: d.getDate(),
+                    monthName: MONTH_NAMES[d.getMonth()],
+                    isWeekend: dow === 0 || dow === 6,
+                    dateStr: d.toLocaleDateString('es-EC', { day: 'numeric', month: 'short' }),
+                    fullDate: d
+                });
+            }
+            return days;
+        }
+
+        // Initialize weekStartDate input to nearest past Sunday
+        function initWeekDate() {
+            if (!weekStartDate) {
+                const now = new Date();
+                now.setDate(now.getDate() - now.getDay());
+                weekStartDate = now.toISOString().split('T')[0];
+            }
+            $('weekStartDate').value = weekStartDate;
+        }
         let dragWorkerId = null;
 
         /* ===== SELECTORS ===== */
@@ -1296,7 +1349,7 @@
         function saveState() {
             try {
                 localStorage.setItem('sv_data', JSON.stringify({
-                    workers, areas, schedule, hourStart, hourEnd, colorIdx
+                    workers, areas, schedule, hourStart, hourEnd, colorIdx, weekStartDate
                 }));
             } catch (e) { }
         }
@@ -1312,6 +1365,7 @@
                 if (d.hourStart != null) { hourStart = d.hourStart; $('hourStart').value = hourStart; }
                 if (d.hourEnd != null) { hourEnd = d.hourEnd; $('hourEnd').value = hourEnd; }
                 if (d.colorIdx != null) colorIdx = d.colorIdx;
+                if (d.weekStartDate) { weekStartDate = d.weekStartDate; $('weekStartDate').value = weekStartDate; }
                 renderWorkers();
                 renderAreas();
             } catch (e) { }
@@ -1459,27 +1513,42 @@
 
         /* ===== GRID ===== */
         function getTodayIndex() {
-            const d = new Date().getDay();
-            return d === 0 ? 6 : d - 1; // 0=Mon..6=Sun
+            const gridDays = getGridDays();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            for (let i = 0; i < gridDays.length; i++) {
+                const gd = gridDays[i].fullDate;
+                gd.setHours(0, 0, 0, 0);
+                if (gd.getTime() === today.getTime()) return i;
+            }
+            return -1;
         }
 
         function rebuildGrid() {
-            hourStart = parseInt($('hourStart').value) || 6;
-            hourEnd = parseInt($('hourEnd').value) || 22;
-            if (hourEnd <= hourStart) { hourEnd = hourStart + 1; $('hourEnd').value = hourEnd; }
+            hourStart = parseInt($('hourStart').value);
+            if (isNaN(hourStart) || hourStart < 0) hourStart = 0;
+            if (hourStart > 23) hourStart = 23;
+            hourEnd = parseInt($('hourEnd').value);
+            if (isNaN(hourEnd) || hourEnd < 1) hourEnd = 1;
+            if (hourEnd > 24) hourEnd = 24;
+            if (hourEnd <= hourStart) { hourEnd = hourStart + 1; }
+            $('hourStart').value = hourStart;
+            $('hourEnd').value = hourEnd;
+
+            weekStartDate = $('weekStartDate').value || weekStartDate;
 
             const grid = $('scheduleGrid');
+            const gridDays = getGridDays();
             const todayIdx = getTodayIndex();
             let html = '';
 
             // Headers
             html += '<div class="sg-hdr">🕐</div>';
-            DAYS.forEach((d, i) => {
+            gridDays.forEach((gd, i) => {
                 let cls = 'sg-hdr day-col';
                 if (i === todayIdx) cls += ' today-col';
-                if (i >= 5) cls += ' weekend-col';
-                const shortLabel = i >= 5 ? 'Fin de semana' : '';
-                html += `<div class="${cls}">${d}${i === todayIdx ? '' : (shortLabel ? `<span class="day-short">${shortLabel}</span>` : '')}</div>`;
+                if (gd.isWeekend) cls += ' weekend-col';
+                html += `<div class="${cls}">${gd.name}<span class="day-short">${gd.dayNum} ${gd.monthName}</span></div>`;
             });
 
             // Rows
@@ -1488,8 +1557,10 @@
             for (let h = hourStart; h < hourEnd; h++) {
                 const isEven = (h - hourStart) % 2 === 0;
                 const hNext = h + 1;
-                html += `<div class="sg-time"><div class="time-range"><span class="time-start">${h}:00</span><span class="time-sep">a</span><span class="time-end">${hNext}:00</span></div></div>`;
-                for (let di = 0; di < 7; di++) {
+                const hDisplay = h === 0 ? '0' : h;
+                const hNextDisplay = hNext === 24 ? '0' : hNext;
+                html += `<div class="sg-time"><div class="time-range"><span class="time-start">${hDisplay}:00</span><span class="time-sep">a</span><span class="time-end">${hNextDisplay}:00</span></div></div>`;
+                for (let di = 0; di < NUM_DAYS; di++) {
                     const key = di + '-' + h;
                     const entries = schedule[key] || [];
                     totalAssigned += entries.length;
@@ -1497,7 +1568,7 @@
 
                     let cls = 'sg-cell';
                     if (isEven) cls += ' row-even';
-                    if (di >= 5) cls += ' weekend';
+                    if (gridDays[di].isWeekend) cls += ' weekend';
                     if (di === todayIdx) cls += ' today-highlight';
                     if (entries.length > 0) cls += ' has-entries';
 
@@ -1588,6 +1659,11 @@
         $('btnApply').addEventListener('click', rebuildGrid);
         $('hourStart').addEventListener('change', rebuildGrid);
         $('hourEnd').addEventListener('change', rebuildGrid);
+        $('weekStartDate').addEventListener('change', () => {
+            weekStartDate = $('weekStartDate').value;
+            rebuildGrid();
+            saveState();
+        });
 
         /* ===== PDF EXPORT ===== */
         $('btnPDF').addEventListener('click', exportPDF);
@@ -1675,8 +1751,9 @@
             let y = 33;
 
             // ========== GRID LAYOUT ==========
+            const gridDays = getGridDays();
             const timeColW = 22;
-            const colW = (W - 2 * M - timeColW) / 7;
+            const colW = (W - 2 * M - timeColW) / NUM_DAYS;
             const entryItemH = 5.5;  // Fixed height per entry — no cramming
             const entryGap = 0.6;
             const minRowH = 9;
@@ -1686,7 +1763,7 @@
             const rowHeights = [];
             for (let h = hourStart; h < hourEnd; h++) {
                 let maxEntries = 0;
-                for (let di = 0; di < 7; di++) {
+                for (let di = 0; di < NUM_DAYS; di++) {
                     const key = di + '-' + h;
                     const cnt = (schedule[key] || []).length;
                     if (cnt > maxEntries) maxEntries = cnt;
@@ -1713,12 +1790,13 @@
                 pdf.text('HORA', M + timeColW / 2, yPos + 5.2, { align: 'center' });
 
                 const dayClr = [
-                    [100, 180, 255], [80, 220, 160], [180, 160, 255],
+                    [255, 200, 80], [100, 180, 255], [80, 220, 160], [180, 160, 255],
                     [255, 180, 100], [255, 130, 155], [255, 200, 80], [255, 200, 80]
                 ];
-                DAYS.forEach((d, i) => {
-                    pdf.setTextColor(...dayClr[i]);
-                    pdf.text(d.toUpperCase(), M + timeColW + i * colW + colW / 2, yPos + 5.2, { align: 'center' });
+                gridDays.forEach((gd, i) => {
+                    pdf.setTextColor(...dayClr[i % dayClr.length]);
+                    const label = gd.name.substring(0, 3).toUpperCase() + ' ' + gd.dayNum;
+                    pdf.text(label, M + timeColW + i * colW + colW / 2, yPos + 5.2, { align: 'center' });
                 });
                 return yPos + 8;
             }
@@ -1763,17 +1841,19 @@
 
                 // Time label — "6:00 a 7:00"
                 const hNext = h + 1;
+                const hDisp = h === 0 ? '0' : h;
+                const hNextDisp = hNext === 24 ? '0' : hNext;
                 pdf.setTextColor(...cTxt);
                 pdf.setFontSize(8);
                 pdf.setFont('helvetica', 'bold');
-                pdf.text(h + ':00', M + timeColW / 2, y + rowH / 2 - 1, { align: 'center' });
+                pdf.text(hDisp + ':00', M + timeColW / 2, y + rowH / 2 - 1, { align: 'center' });
                 pdf.setFontSize(5.5);
                 pdf.setFont('helvetica', 'normal');
                 pdf.setTextColor(...cDim);
-                pdf.text('a ' + hNext + ':00', M + timeColW / 2, y + rowH / 2 + 2, { align: 'center' });
+                pdf.text('a ' + hNextDisp + ':00', M + timeColW / 2, y + rowH / 2 + 2, { align: 'center' });
 
                 // Day cells
-                for (let di = 0; di < 7; di++) {
+                for (let di = 0; di < NUM_DAYS; di++) {
                     const cx = M + timeColW + di * colW;
 
                     // Cell border
@@ -1781,7 +1861,7 @@
                     pdf.rect(cx, y, colW, rowH);
 
                     // Weekend subtle tint
-                    if (di >= 5) {
+                    if (gridDays[di].isWeekend) {
                         pdf.setFillColor(25, 30, 18);
                         pdf.rect(cx + 0.15, y + 0.15, colW - 0.3, rowH - 0.3, 'F');
                     }
@@ -1874,7 +1954,8 @@
                 pdf.text('Pág. ' + p + ' de ' + pgs, W - M, H - 4.5, { align: 'right' });
             }
 
-            const fname = 'Horario_Semanal_' + new Date().toLocaleDateString('es-EC').replace(/\//g, '-') + '.pdf';
+            const gridDaysForName = getGridDays();
+            const fname = 'Horario_' + gridDaysForName[0].dayNum + '_' + gridDaysForName[0].monthName + '_al_' + gridDaysForName[NUM_DAYS - 1].dayNum + '_' + gridDaysForName[NUM_DAYS - 1].monthName + '.pdf';
             pdf.save(fname);
             toast('PDF descargado: ' + fname);
         }
@@ -1900,8 +1981,10 @@
         }
 
         /* ===== INIT ===== */
+        initWeekDate();
         if (sessionStorage.getItem('sv_auth') === '1') {
             loadState();
+            initWeekDate();
             rebuildGrid();
         }
     </script>
