@@ -1078,6 +1078,201 @@
             position: relative;
         }
 
+        /* ===== VIEW MODE TOGGLE ===== */
+        .mode-toggle {
+            display: flex;
+            gap: 2px;
+            background: var(--surf);
+            border: 1px solid var(--brd);
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .mode-btn {
+            font-family: var(--f);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--dim);
+            transition: all .2s;
+            white-space: nowrap;
+        }
+
+        .mode-btn.active {
+            background: var(--acc);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(99, 179, 255, .3);
+        }
+
+        .mode-btn:not(.active):hover {
+            color: var(--txt);
+            background: var(--surf2);
+        }
+
+        /* ===== DAY HEADER ACTIONS (Copy/Paste) ===== */
+        .sg-hdr.day-col {
+            position: relative;
+        }
+
+        .day-actions {
+            display: flex;
+            gap: 2px;
+            margin-top: 3px;
+        }
+
+        .day-act {
+            font-family: var(--f);
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border: 1px solid var(--brd);
+            border-radius: 4px;
+            cursor: pointer;
+            background: var(--surf);
+            color: var(--dim);
+            transition: all .15s;
+        }
+
+        .day-act:hover {
+            background: var(--acc);
+            color: #fff;
+            border-color: var(--acc);
+        }
+
+        .day-act.pasted {
+            background: var(--grn);
+            color: #fff;
+            border-color: var(--grn);
+        }
+
+        .sg-hdr.day-col.copied-col {
+            box-shadow: inset 0 -3px 0 var(--acc);
+        }
+
+        /* ===== MULTI-HOUR DRAG SELECTION ===== */
+        .sg-cell.range-select {
+            background: rgba(99, 179, 255, .12) !important;
+            box-shadow: inset 0 0 0 2px rgba(99, 179, 255, .4);
+        }
+
+        .sg-cell.range-select::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(99, 179, 255, .08), rgba(99, 179, 255, .02));
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== SHIFT MODE GRID ===== */
+        .schedule-grid.shift-mode {
+            grid-template-columns: 140px repeat(8, 1fr);
+        }
+
+        .sg-shift-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 6px;
+            background: var(--surf2);
+            border-right: 1px solid var(--brd);
+            border-bottom: 1px solid var(--brd);
+            gap: 2px;
+        }
+
+        .sg-shift-label .shift-icon {
+            font-size: 18px;
+        }
+
+        .sg-shift-label .shift-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--txt);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .sg-shift-label .shift-hours {
+            font-size: 10px;
+            color: var(--dim);
+            font-weight: 500;
+        }
+
+        .sg-shift-cell {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 3px;
+            padding: 6px;
+            min-height: 55px;
+            background: var(--bg2);
+            border-right: 1px solid var(--brd);
+            border-bottom: 1px solid var(--brd);
+            position: relative;
+            transition: background .15s;
+        }
+
+        .sg-shift-cell.weekend {
+            background: rgba(99, 179, 255, .02);
+        }
+
+        .sg-shift-cell.drag-over {
+            background: rgba(99, 179, 255, .08) !important;
+            box-shadow: inset 0 0 0 2px var(--acc);
+        }
+
+        .sg-shift-cell.has-entries {
+            background: rgba(99, 179, 255, .03);
+        }
+
+        .shift-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            position: relative;
+            cursor: default;
+        }
+
+        .shift-pill .sp-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .shift-pill .sp-remove {
+            font-size: 10px;
+            cursor: pointer;
+            opacity: 0;
+            margin-left: 2px;
+            transition: all .15s;
+            font-weight: 700;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .shift-pill:hover .sp-remove {
+            opacity: 1;
+        }
+
+        .shift-pill .sp-remove:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
@@ -1227,11 +1422,15 @@
             <!-- SCHEDULE AREA -->
             <div class="schedule-area">
                 <div class="grid-toolbar">
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" id="modeHours" data-mode="hours">🕐 Por Horas</button>
+                        <button class="mode-btn" id="modeShifts" data-mode="shifts">📋 Por Turnos</button>
+                    </div>
                     <div class="gt-group">
                         <label>Semana del</label>
                         <input type="date" id="weekStartDate">
                     </div>
-                    <div class="gt-group">
+                    <div class="gt-group" id="hourControls">
                         <label>Hora desde</label>
                         <input type="number" id="hourStart" value="6" min="0" max="23">
                         <label>hasta</label>
@@ -1259,11 +1458,24 @@
         let areas = [];
         let schedule = {};
         let hourStart = 6, hourEnd = 22;
-        let weekStartDate = ''; // YYYY-MM-DD of the Sunday that starts the 8-day period
+        let weekStartDate = '';
+        let viewMode = 'hours'; // 'hours' or 'shifts'
+        let copiedDay = null;   // {dayIndex, entries: [{hour, workerId, areaId}]}
+        let copiedDayIdx = -1;
+
+        // Multi-hour drag state
+        let rangeDrag = { active: false, workerId: '', dayIdx: -1, startHour: -1, endHour: -1 };
+
+        // Shift definitions
+        const SHIFTS = [
+            { name: 'Mañana', icon: '🌅', startH: 6, endH: 12, color: '#FBBF24' },
+            { name: 'Tarde', icon: '☀️', startH: 12, endH: 18, color: '#FB923C' },
+            { name: 'Noche', icon: '🌙', startH: 18, endH: 26, color: '#818CF8' } // 26 = 2am next day (wraps)
+        ];
 
         const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
         const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        const NUM_DAYS = 8; // Domingo a Domingo
+        const NUM_DAYS = 8;
         const COLORS = [
             '#63B3FF', '#4ADE80', '#FBBF24', '#FB7185', '#A78BFA', '#F472B6', '#22D3EE',
             '#FB923C', '#818CF8', '#2DD4BF', '#E879F9', '#84CC16', '#34D399', '#F59E0B',
@@ -1349,7 +1561,7 @@
         function saveState() {
             try {
                 localStorage.setItem('sv_data', JSON.stringify({
-                    workers, areas, schedule, hourStart, hourEnd, colorIdx, weekStartDate
+                    workers, areas, schedule, hourStart, hourEnd, colorIdx, weekStartDate, viewMode
                 }));
             } catch (e) { }
         }
@@ -1366,6 +1578,7 @@
                 if (d.hourEnd != null) { hourEnd = d.hourEnd; $('hourEnd').value = hourEnd; }
                 if (d.colorIdx != null) colorIdx = d.colorIdx;
                 if (d.weekStartDate) { weekStartDate = d.weekStartDate; $('weekStartDate').value = weekStartDate; }
+                if (d.viewMode) viewMode = d.viewMode;
                 renderWorkers();
                 renderAreas();
             } catch (e) { }
@@ -1517,11 +1730,83 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             for (let i = 0; i < gridDays.length; i++) {
-                const gd = gridDays[i].fullDate;
+                const gd = new Date(gridDays[i].fullDate);
                 gd.setHours(0, 0, 0, 0);
                 if (gd.getTime() === today.getTime()) return i;
             }
             return -1;
+        }
+
+        // Get unique workers for a shift (set of hours) on a given day
+        function getShiftWorkers(dayIdx, startH, endH) {
+            const seen = new Map();
+            for (let h = startH; h < endH; h++) {
+                const hh = h >= 24 ? h - 24 : h;
+                const key = dayIdx + '-' + hh;
+                const entries = schedule[key] || [];
+                entries.forEach(en => {
+                    if (!seen.has(en.workerId)) {
+                        seen.set(en.workerId, en);
+                    }
+                });
+            }
+            return Array.from(seen.values());
+        }
+
+        // Assign a worker to all hours in a shift
+        function assignShift(dayIdx, startH, endH, workerId, areaId) {
+            for (let h = startH; h < endH; h++) {
+                const hh = h >= 24 ? h - 24 : h;
+                const key = dayIdx + '-' + hh;
+                if (!schedule[key]) schedule[key] = [];
+                if (!schedule[key].some(en => en.workerId === workerId)) {
+                    schedule[key].push({ workerId, areaId });
+                }
+            }
+        }
+
+        // Remove a worker from all hours in a shift
+        function removeShift(dayIdx, startH, endH, workerId) {
+            for (let h = startH; h < endH; h++) {
+                const hh = h >= 24 ? h - 24 : h;
+                const key = dayIdx + '-' + hh;
+                if (schedule[key]) {
+                    schedule[key] = schedule[key].filter(en => en.workerId !== workerId);
+                    if (!schedule[key].length) delete schedule[key];
+                }
+            }
+        }
+
+        // Copy all schedule entries for a day
+        function copyDay(dayIdx) {
+            copiedDay = [];
+            copiedDayIdx = dayIdx;
+            for (let h = 0; h < 24; h++) {
+                const key = dayIdx + '-' + h;
+                const entries = schedule[key] || [];
+                entries.forEach(en => {
+                    copiedDay.push({ hour: h, workerId: en.workerId, areaId: en.areaId });
+                });
+            }
+            toast('Día copiado (' + copiedDay.length + ' turnos)');
+            rebuildGrid();
+        }
+
+        // Paste copied entries to target day
+        function pasteDay(dayIdx) {
+            if (!copiedDay || !copiedDay.length) { toast('Nada que pegar', true); return; }
+            let count = 0;
+            copiedDay.forEach(({ hour, workerId, areaId }) => {
+                const key = dayIdx + '-' + hour;
+                if (!schedule[key]) schedule[key] = [];
+                if (!schedule[key].some(en => en.workerId === workerId)) {
+                    schedule[key].push({ workerId, areaId });
+                    count++;
+                }
+            });
+            rebuildGrid();
+            saveState();
+            toast('Pegados ' + count + ' turnos');
         }
 
         function rebuildGrid() {
@@ -1537,18 +1822,40 @@
 
             weekStartDate = $('weekStartDate').value || weekStartDate;
 
+            // Toggle hour controls visibility
+            $('hourControls').style.display = viewMode === 'hours' ? '' : 'none';
+
+            // Update mode toggle buttons
+            document.querySelectorAll('.mode-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.mode === viewMode);
+            });
+
+            if (viewMode === 'shifts') {
+                buildShiftGrid();
+            } else {
+                buildHoursGrid();
+            }
+        }
+
+        function buildHoursGrid() {
             const grid = $('scheduleGrid');
+            grid.classList.remove('shift-mode');
             const gridDays = getGridDays();
             const todayIdx = getTodayIndex();
             let html = '';
 
-            // Headers
+            // Headers with copy/paste actions
             html += '<div class="sg-hdr">🕐</div>';
             gridDays.forEach((gd, i) => {
                 let cls = 'sg-hdr day-col';
                 if (i === todayIdx) cls += ' today-col';
                 if (gd.isWeekend) cls += ' weekend-col';
-                html += `<div class="${cls}">${gd.name}<span class="day-short">${gd.dayNum} ${gd.monthName}</span></div>`;
+                if (i === copiedDayIdx) cls += ' copied-col';
+                html += `<div class="${cls}" data-di="${i}">${gd.name}<span class="day-short">${gd.dayNum} ${gd.monthName}</span>
+                <div class="day-actions">
+                    <button class="day-act btn-copy-day" data-di="${i}" title="Copiar día">📋</button>
+                    <button class="day-act btn-paste-day" data-di="${i}" title="Pegar día" ${!copiedDay ? 'disabled style="opacity:.3"' : ''}>📥</button>
+                </div></div>`;
             });
 
             // Rows
@@ -1589,7 +1896,7 @@
         </div>`;
                     }).join('');
 
-                    html += `<div class="${cls}" data-key="${key}">${cellHTML}</div>`;
+                    html += `<div class="${cls}" data-key="${key}" data-di="${di}" data-hour="${h}">${cellHTML}</div>`;
                 }
             }
             grid.innerHTML = html;
@@ -1598,14 +1905,33 @@
             $('statAssigned').textContent = totalAssigned;
             $('statCells').textContent = totalCells;
 
-            // Attach cell events
+            // Attach events — drop + multi-hour drag
+            attachHoursEvents(grid);
+        }
+
+        function attachHoursEvents(grid) {
+            // Copy/paste day buttons
+            grid.querySelectorAll('.btn-copy-day').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    copyDay(parseInt(btn.dataset.di));
+                });
+            });
+            grid.querySelectorAll('.btn-paste-day').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    pasteDay(parseInt(btn.dataset.di));
+                });
+            });
+
+            // Cell drag & drop (worker from sidebar)
             grid.querySelectorAll('.sg-cell').forEach(cell => {
                 cell.addEventListener('dragover', e => {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = 'copy';
                     cell.classList.add('drag-over');
                 });
-                cell.addEventListener('dragleave', e => {
+                cell.addEventListener('dragleave', () => {
                     cell.classList.remove('drag-over');
                 });
                 cell.addEventListener('drop', e => {
@@ -1614,6 +1940,8 @@
                     const wid = e.dataTransfer.getData('text/plain') || dragWorkerId;
                     if (!wid) return;
                     const key = cell.dataset.key;
+                    const di = parseInt(cell.dataset.di);
+                    const hour = parseInt(cell.dataset.hour);
                     if (!schedule[key]) schedule[key] = [];
                     if (schedule[key].some(en => en.workerId === wid)) {
                         toast('Este trabajador ya está aquí', true);
@@ -1621,12 +1949,28 @@
                     }
                     const defArea = areas.length ? areas[0].id : '';
                     schedule[key].push({ workerId: wid, areaId: defArea });
+
+                    // Start multi-hour drag
+                    rangeDrag = { active: true, workerId: wid, dayIdx: di, startHour: hour, endHour: hour };
                     rebuildGrid();
                     saveState();
                 });
+
+                // Multi-hour drag: on mouseenter while rangeDrag is active
+                cell.addEventListener('mouseenter', () => {
+                    if (!rangeDrag.active) return;
+                    const di = parseInt(cell.dataset.di);
+                    const hour = parseInt(cell.dataset.hour);
+                    if (di !== rangeDrag.dayIdx) return; // same column only
+                    rangeDrag.endHour = hour;
+                    updateRangeHighlight(grid);
+                });
             });
 
-            // Remove buttons on entries
+            // Multi-hour drag: finalize on mouseup
+            document.addEventListener('mouseup', finalizeRangeDrag);
+
+            // Remove buttons
             grid.querySelectorAll('.ce-remove').forEach(btn => {
                 btn.addEventListener('click', e => {
                     e.stopPropagation();
@@ -1642,7 +1986,7 @@
 
             // Area selectors
             grid.querySelectorAll('.ce-select').forEach(sel => {
-                sel.addEventListener('change', e => {
+                sel.addEventListener('change', () => {
                     const key = sel.dataset.key;
                     const wid = sel.dataset.wid;
                     if (!schedule[key]) return;
@@ -1656,6 +2000,168 @@
             saveState();
         }
 
+        // Range drag: highlight cells in range
+        function updateRangeHighlight(grid) {
+            grid.querySelectorAll('.sg-cell').forEach(cell => {
+                cell.classList.remove('range-select');
+                if (!rangeDrag.active) return;
+                const di = parseInt(cell.dataset.di);
+                const hour = parseInt(cell.dataset.hour);
+                if (di !== rangeDrag.dayIdx) return;
+                const lo = Math.min(rangeDrag.startHour, rangeDrag.endHour);
+                const hi = Math.max(rangeDrag.startHour, rangeDrag.endHour);
+                if (hour >= lo && hour <= hi) {
+                    cell.classList.add('range-select');
+                }
+            });
+        }
+
+        // Finalize multi-hour drag: assign worker to all hours in range
+        function finalizeRangeDrag() {
+            if (!rangeDrag.active) return;
+            const { workerId, dayIdx, startHour, endHour } = rangeDrag;
+            const lo = Math.min(startHour, endHour);
+            const hi = Math.max(startHour, endHour);
+            const defArea = areas.length ? areas[0].id : '';
+            let added = 0;
+            for (let h = lo; h <= hi; h++) {
+                const key = dayIdx + '-' + h;
+                if (!schedule[key]) schedule[key] = [];
+                if (!schedule[key].some(en => en.workerId === workerId)) {
+                    schedule[key].push({ workerId, areaId: defArea });
+                    added++;
+                }
+            }
+            rangeDrag = { active: false, workerId: '', dayIdx: -1, startHour: -1, endHour: -1 };
+            if (added > 0) {
+                rebuildGrid();
+                saveState();
+                if (hi - lo > 0) toast('Asignado a ' + (hi - lo + 1) + ' horas');
+            }
+        }
+
+        /* ===== SHIFT MODE GRID ===== */
+        function buildShiftGrid() {
+            const grid = $('scheduleGrid');
+            grid.classList.add('shift-mode');
+            const gridDays = getGridDays();
+            const todayIdx = getTodayIndex();
+            let html = '';
+
+            // Headers
+            html += '<div class="sg-hdr">Turno</div>';
+            gridDays.forEach((gd, i) => {
+                let cls = 'sg-hdr day-col';
+                if (i === todayIdx) cls += ' today-col';
+                if (gd.isWeekend) cls += ' weekend-col';
+                if (i === copiedDayIdx) cls += ' copied-col';
+                html += `<div class="${cls}" data-di="${i}">${gd.name}<span class="day-short">${gd.dayNum} ${gd.monthName}</span>
+                <div class="day-actions">
+                    <button class="day-act btn-copy-day" data-di="${i}" title="Copiar día">📋</button>
+                    <button class="day-act btn-paste-day" data-di="${i}" title="Pegar día" ${!copiedDay ? 'disabled style="opacity:.3"' : ''}>📥</button>
+                </div></div>`;
+            });
+
+            // Shift rows
+            let totalAssigned = 0;
+            SHIFTS.forEach((shift, si) => {
+                // Shift label
+                html += `<div class="sg-shift-label">
+                    <span class="shift-icon">${shift.icon}</span>
+                    <span class="shift-name">${shift.name}</span>
+                    <span class="shift-hours">${shift.startH}:00 a ${shift.endH >= 24 ? (shift.endH - 24) : shift.endH}:00</span>
+                </div>`;
+
+                // Day cells
+                for (let di = 0; di < NUM_DAYS; di++) {
+                    const shiftWorkers = getShiftWorkers(di, shift.startH, shift.endH);
+                    totalAssigned += shiftWorkers.length;
+
+                    let cls = 'sg-shift-cell';
+                    if (gridDays[di].isWeekend) cls += ' weekend';
+                    if (shiftWorkers.length > 0) cls += ' has-entries';
+
+                    let pillsHTML = shiftWorkers.map(en => {
+                        const w = workers.find(ww => ww.id === en.workerId);
+                        if (!w) return '';
+                        return `<div class="shift-pill" style="background:${hexAlpha(w.color, .15)};color:${w.color}">
+                            <span class="sp-dot" style="background:${w.color}"></span>
+                            ${esc(w.name)}
+                            <span class="sp-remove" data-di="${di}" data-si="${si}" data-wid="${w.id}" title="Quitar">✕</span>
+                        </div>`;
+                    }).join('');
+
+                    html += `<div class="${cls}" data-di="${di}" data-si="${si}">${pillsHTML}</div>`;
+                }
+            });
+
+            grid.innerHTML = html;
+            $('statAssigned').textContent = totalAssigned;
+            $('statCells').textContent = NUM_DAYS * SHIFTS.length;
+
+            // Attach shift events
+            attachShiftEvents(grid);
+        }
+
+        function attachShiftEvents(grid) {
+            // Copy/paste day buttons
+            grid.querySelectorAll('.btn-copy-day').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    copyDay(parseInt(btn.dataset.di));
+                });
+            });
+            grid.querySelectorAll('.btn-paste-day').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    pasteDay(parseInt(btn.dataset.di));
+                });
+            });
+
+            // Drop on shift cells
+            grid.querySelectorAll('.sg-shift-cell').forEach(cell => {
+                cell.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    cell.classList.add('drag-over');
+                });
+                cell.addEventListener('dragleave', () => {
+                    cell.classList.remove('drag-over');
+                });
+                cell.addEventListener('drop', e => {
+                    e.preventDefault();
+                    cell.classList.remove('drag-over');
+                    const wid = e.dataTransfer.getData('text/plain') || dragWorkerId;
+                    if (!wid) return;
+                    const di = parseInt(cell.dataset.di);
+                    const si = parseInt(cell.dataset.si);
+                    const shift = SHIFTS[si];
+                    const defArea = areas.length ? areas[0].id : '';
+                    assignShift(di, shift.startH, shift.endH, wid, defArea);
+                    rebuildGrid();
+                    saveState();
+                    toast(workers.find(w => w.id === wid)?.name + ' → ' + shift.name);
+                });
+            });
+
+            // Remove buttons on shift pills
+            grid.querySelectorAll('.sp-remove').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const di = parseInt(btn.dataset.di);
+                    const si = parseInt(btn.dataset.si);
+                    const wid = btn.dataset.wid;
+                    const shift = SHIFTS[si];
+                    removeShift(di, shift.startH, shift.endH, wid);
+                    rebuildGrid();
+                    saveState();
+                });
+            });
+
+            saveState();
+        }
+
+        /* ===== MODE TOGGLE & TOOLBAR EVENTS ===== */
         $('btnApply').addEventListener('click', rebuildGrid);
         $('hourStart').addEventListener('change', rebuildGrid);
         $('hourEnd').addEventListener('change', rebuildGrid);
@@ -1663,6 +2169,14 @@
             weekStartDate = $('weekStartDate').value;
             rebuildGrid();
             saveState();
+        });
+
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                viewMode = btn.dataset.mode;
+                rebuildGrid();
+                saveState();
+            });
         });
 
         /* ===== PDF EXPORT ===== */
@@ -1692,6 +2206,8 @@
         function exportPDF() {
             if (!workers.length) { toast('Agregue al menos un trabajador', true); return; }
             if (!Object.keys(schedule).length) { toast('El horario está vacío', true); return; }
+
+            if (viewMode === 'shifts') { exportShiftPDF(); return; }
 
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF('l', 'mm', 'a4');
@@ -1956,6 +2472,157 @@
 
             const gridDaysForName = getGridDays();
             const fname = 'Horario_' + gridDaysForName[0].dayNum + '_' + gridDaysForName[0].monthName + '_al_' + gridDaysForName[NUM_DAYS - 1].dayNum + '_' + gridDaysForName[NUM_DAYS - 1].monthName + '.pdf';
+            pdf.save(fname);
+            toast('PDF descargado: ' + fname);
+        }
+
+        /* ===== SHIFT MODE PDF ===== */
+        function exportShiftPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF('l', 'mm', 'a4');
+            const W = 297, H = 210, M = 8;
+
+            const cBg = [10, 15, 25];
+            const cSurf2 = [28, 40, 62];
+            const cBrd = [35, 50, 75];
+            const cAcc = [99, 179, 255];
+            const cTxt = [230, 235, 245];
+            const cTxt2 = [180, 195, 215];
+            const cDim = [100, 120, 150];
+
+            // ========== FULL PAGE DARK BG ==========
+            pdf.setFillColor(...cBg);
+            pdf.rect(0, 0, W, H, 'F');
+
+            // ========== HEADER ==========
+            pdf.setFillColor(...cSurf2);
+            pdf.rect(0, 0, W, 28, 'F');
+            pdf.setFillColor(...cAcc);
+            pdf.rect(0, 28, W, 1.2, 'F');
+
+            if (logoDataUrl) {
+                try { pdf.addImage(logoDataUrl, 'PNG', M + 1, 3, 22, 22); } catch (e) { }
+            }
+            const lOff = logoDataUrl ? M + 28 : M;
+
+            pdf.setTextColor(...cTxt);
+            pdf.setFontSize(16);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('HORARIO POR TURNOS', lOff, 12);
+
+            pdf.setFontSize(9);
+            pdf.setTextColor(...cAcc);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text('IMPORTADORA BELLA', lOff, 20);
+
+            pdf.setFontSize(8);
+            pdf.setTextColor(...cTxt2);
+            const dateStr = new Date().toLocaleDateString('es-EC', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+            pdf.text('Generado: ' + dateStr, W - M, 12, { align: 'right' });
+
+            let y = 33;
+
+            // ========== GRID LAYOUT ==========
+            const gridDays = getGridDays();
+            const shiftLabelW = 28;
+            const colW = (W - 2 * M - shiftLabelW) / NUM_DAYS;
+            const shiftRowH = 35;
+
+            // ========== DAY HEADERS ==========
+            pdf.setFillColor(...cSurf2);
+            pdf.rect(M, y, W - 2 * M, 8, 'F');
+            pdf.setDrawColor(...cAcc);
+            pdf.setLineWidth(0.4);
+            pdf.line(M, y + 8, W - M, y + 8);
+            pdf.setLineWidth(0.15);
+
+            pdf.setTextColor(...cDim);
+            pdf.setFontSize(6.5);
+            pdf.setFont('helvetica', 'bold');
+            pdf.text('TURNO', M + shiftLabelW / 2, y + 5.2, { align: 'center' });
+
+            const dayClr = [
+                [255, 200, 80], [100, 180, 255], [80, 220, 160], [180, 160, 255],
+                [255, 180, 100], [255, 130, 155], [255, 200, 80], [255, 200, 80]
+            ];
+            gridDays.forEach((gd, i) => {
+                pdf.setTextColor(...dayClr[i % dayClr.length]);
+                const label = gd.name.substring(0, 3).toUpperCase() + ' ' + gd.dayNum;
+                pdf.text(label, M + shiftLabelW + i * colW + colW / 2, y + 5.2, { align: 'center' });
+            });
+            y += 8;
+
+            // ========== SHIFT ROWS ==========
+            const shiftColors = [[251, 191, 36], [251, 146, 60], [129, 140, 248]];
+
+            SHIFTS.forEach((shift, si) => {
+                // Shift label
+                pdf.setFillColor(...cSurf2);
+                pdf.rect(M, y, shiftLabelW, shiftRowH, 'F');
+                pdf.setDrawColor(...cBrd);
+                pdf.rect(M, y, shiftLabelW, shiftRowH);
+
+                pdf.setTextColor(...shiftColors[si]);
+                pdf.setFontSize(8);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(shift.name.toUpperCase(), M + shiftLabelW / 2, y + shiftRowH / 2 - 3, { align: 'center' });
+                pdf.setFontSize(6);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setTextColor(...cDim);
+                const endDisp = shift.endH >= 24 ? (shift.endH - 24) + ':00' : shift.endH + ':00';
+                pdf.text(shift.startH + ':00 a ' + endDisp, M + shiftLabelW / 2, y + shiftRowH / 2 + 1, { align: 'center' });
+
+                // Day cells
+                for (let di = 0; di < NUM_DAYS; di++) {
+                    const cx = M + shiftLabelW + di * colW;
+                    pdf.setDrawColor(...cBrd);
+                    pdf.setFillColor(si % 2 === 0 ? 15 : 20, si % 2 === 0 ? 22 : 30, si % 2 === 0 ? 35 : 48);
+                    pdf.rect(cx, y, colW, shiftRowH, 'FD');
+
+                    const shiftWorkers = getShiftWorkers(di, shift.startH, shift.endH);
+                    let ey = y + 3;
+
+                    shiftWorkers.forEach(en => {
+                        const w = workers.find(ww => ww.id === en.workerId);
+                        if (!w) return;
+                        const rgb = hexToRgb(w.color);
+                        // Colored pill
+                        pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
+                        pdf.roundedRect(cx + 2, ey, colW - 4, 5, 1.2, 1.2, 'F');
+                        pdf.setTextColor(255, 255, 255);
+                        pdf.setFontSize(6.5);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.text(w.name, cx + colW / 2, ey + 3.5, { align: 'center' });
+                        ey += 6;
+                    });
+                }
+
+                y += shiftRowH;
+            });
+
+            // ========== FOOTER ==========
+            const pgs = pdf.internal.getNumberOfPages();
+            for (let p = 1; p <= pgs; p++) {
+                pdf.setPage(p);
+                pdf.setFillColor(...cSurf2);
+                pdf.rect(0, H - 10, W, 10, 'F');
+                pdf.setDrawColor(...cAcc);
+                pdf.setLineWidth(0.3);
+                pdf.line(0, H - 10, W, H - 10);
+                pdf.setLineWidth(0.15);
+
+                pdf.setFontSize(6.5);
+                pdf.setTextColor(...cDim);
+                pdf.setFont('helvetica', 'italic');
+                pdf.text('Importadora Bella — Horario por turnos', M, H - 4.5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text('Pág. ' + p + ' de ' + pgs, W - M, H - 4.5, { align: 'right' });
+            }
+
+            const gridDaysForName = getGridDays();
+            const fname = 'Turnos_' + gridDaysForName[0].dayNum + '_' + gridDaysForName[0].monthName + '_al_' + gridDaysForName[NUM_DAYS - 1].dayNum + '_' + gridDaysForName[NUM_DAYS - 1].monthName + '.pdf';
             pdf.save(fname);
             toast('PDF descargado: ' + fname);
         }
