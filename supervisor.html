@@ -1273,6 +1273,173 @@
             color: #fff;
         }
 
+        /* Area selector on shift pills */
+        .shift-pill .sp-area-select {
+            font-family: var(--f);
+            font-size: 9px;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, .15);
+            background: rgba(0, 0, 0, .3);
+            color: inherit;
+            cursor: pointer;
+            max-width: 70px;
+            outline: none;
+            transition: all .15s;
+        }
+
+        .shift-pill .sp-area-select:hover,
+        .shift-pill .sp-area-select:focus {
+            border-color: rgba(255, 255, 255, .3);
+            background: rgba(0, 0, 0, .5);
+        }
+
+        /* ===== EXTRA HOURS ROW (Shift View) ===== */
+        .sg-extra-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            background: var(--surf);
+            border-right: 1px solid var(--brd);
+            border-bottom: 2px solid var(--brd);
+            gap: 2px;
+            position: relative;
+        }
+
+        .sg-extra-label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: repeating-linear-gradient(90deg, var(--brd) 0, var(--brd) 4px, transparent 4px, transparent 8px);
+        }
+
+        .sg-extra-label .extra-icon {
+            font-size: 14px;
+        }
+
+        .sg-extra-label .extra-name {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        .sg-extra-label .extra-hours {
+            font-size: 9px;
+            color: var(--mute);
+            font-weight: 500;
+        }
+
+        .sg-extra-cell {
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 3px;
+            padding: 5px;
+            min-height: 40px;
+            background: rgba(15, 21, 32, .6);
+            border-right: 1px solid var(--brd);
+            border-bottom: 2px solid var(--brd);
+            position: relative;
+            transition: background .15s;
+            border-top: 2px dashed rgba(99, 179, 255, .15);
+        }
+
+        .sg-extra-cell.weekend {
+            background: rgba(251, 191, 36, .015);
+        }
+
+        .sg-extra-cell.drag-over {
+            background: rgba(99, 179, 255, .06) !important;
+            box-shadow: inset 0 0 0 2px rgba(99, 179, 255, .4);
+        }
+
+        .sg-extra-cell.has-entries {
+            background: rgba(99, 179, 255, .02);
+        }
+
+        .extra-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            position: relative;
+            cursor: default;
+            border: 1px dashed rgba(255, 255, 255, .12);
+            opacity: .85;
+        }
+
+        .extra-pill .ep-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .extra-pill .ep-area-select {
+            font-family: var(--f);
+            font-size: 8px;
+            font-weight: 600;
+            padding: 1px 3px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(0, 0, 0, .3);
+            color: inherit;
+            cursor: pointer;
+            max-width: 60px;
+            outline: none;
+        }
+
+        .extra-pill .ep-remove {
+            font-size: 9px;
+            cursor: pointer;
+            opacity: 0;
+            margin-left: 1px;
+            transition: all .12s;
+            font-weight: 700;
+            width: 13px;
+            height: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .extra-pill:hover .ep-remove {
+            opacity: 1;
+        }
+
+        .extra-pill .ep-remove:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        /* Extra hours differentiation in HOURS view */
+        .cell-entry.is-extra {
+            border: 1px dashed rgba(255, 255, 255, .15);
+            opacity: .7;
+        }
+
+        .cell-entry.is-extra .ce-extra-tag {
+            font-size: 8px;
+            font-weight: 700;
+            padding: 0 4px;
+            border-radius: 3px;
+            background: rgba(129, 140, 248, .2);
+            color: #818CF8;
+            white-space: nowrap;
+        }
+
         /* ===== TOAST ===== */
         .toast {
             position: fixed;
@@ -1466,11 +1633,11 @@
         // Multi-hour drag state
         let rangeDrag = { active: false, workerId: '', dayIdx: -1, startHour: -1, endHour: -1 };
 
-        // Shift definitions
+        // Shift definitions (with 2 hours for "Otra Área" after each shift)
         const SHIFTS = [
-            { name: 'Mañana', icon: '🌅', startH: 6, endH: 12, color: '#FBBF24' },
-            { name: 'Tarde', icon: '☀️', startH: 12, endH: 18, color: '#FB923C' },
-            { name: 'Noche', icon: '🌙', startH: 18, endH: 26, color: '#818CF8' } // 26 = 2am next day (wraps)
+            { name: 'Mañana', icon: '🌅', startH: 6, endH: 12, extraStartH: 12, extraEndH: 14, color: '#FBBF24' },
+            { name: 'Tarde', icon: '☀️', startH: 12, endH: 18, extraStartH: 18, extraEndH: 20, color: '#FB923C' },
+            { name: 'Noche', icon: '🌙', startH: 18, endH: 24, extraStartH: 24, extraEndH: 26, color: '#818CF8' } // 24 = midnight, 26 = 2am next day (wraps)
         ];
 
         const DAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -1737,7 +1904,7 @@
             return -1;
         }
 
-        // Get unique workers for a shift (set of hours) on a given day
+        // Get unique workers for a shift (set of hours) on a given day — EXCLUDES extra entries
         function getShiftWorkers(dayIdx, startH, endH) {
             const seen = new Map();
             for (let h = startH; h < endH; h++) {
@@ -1745,7 +1912,7 @@
                 const key = dayIdx + '-' + hh;
                 const entries = schedule[key] || [];
                 entries.forEach(en => {
-                    if (!seen.has(en.workerId)) {
+                    if (!en.isExtra && !seen.has(en.workerId)) {
                         seen.set(en.workerId, en);
                     }
                 });
@@ -1753,28 +1920,70 @@
             return Array.from(seen.values());
         }
 
-        // Assign a worker to all hours in a shift
+        // Assign a worker to all hours in a shift (main only, not extra)
         function assignShift(dayIdx, startH, endH, workerId, areaId) {
             for (let h = startH; h < endH; h++) {
                 const hh = h >= 24 ? h - 24 : h;
                 const key = dayIdx + '-' + hh;
                 if (!schedule[key]) schedule[key] = [];
-                if (!schedule[key].some(en => en.workerId === workerId)) {
+                // Only check duplicates among non-extra entries
+                if (!schedule[key].some(en => en.workerId === workerId && !en.isExtra)) {
                     schedule[key].push({ workerId, areaId });
                 }
             }
         }
 
-        // Remove a worker from all hours in a shift
+        // Assign a worker to the extra hours of a shift
+        function assignExtra(dayIdx, extraStartH, extraEndH, workerId, areaId) {
+            for (let h = extraStartH; h < extraEndH; h++) {
+                const hh = h >= 24 ? h - 24 : h;
+                const key = dayIdx + '-' + hh;
+                if (!schedule[key]) schedule[key] = [];
+                // Only check duplicates among extra entries
+                if (!schedule[key].some(en => en.workerId === workerId && en.isExtra)) {
+                    schedule[key].push({ workerId, areaId, isExtra: true });
+                }
+            }
+        }
+
+        // Remove a worker from all hours in a shift (main entries only, preserves extras)
         function removeShift(dayIdx, startH, endH, workerId) {
             for (let h = startH; h < endH; h++) {
                 const hh = h >= 24 ? h - 24 : h;
                 const key = dayIdx + '-' + hh;
                 if (schedule[key]) {
-                    schedule[key] = schedule[key].filter(en => en.workerId !== workerId);
+                    schedule[key] = schedule[key].filter(en => !(en.workerId === workerId && !en.isExtra));
                     if (!schedule[key].length) delete schedule[key];
                 }
             }
+        }
+
+        // Remove a worker from extra hours only (entries with isExtra flag)
+        function removeExtra(dayIdx, extraStartH, extraEndH, workerId) {
+            for (let h = extraStartH; h < extraEndH; h++) {
+                const hh = h >= 24 ? h - 24 : h;
+                const key = dayIdx + '-' + hh;
+                if (schedule[key]) {
+                    schedule[key] = schedule[key].filter(en => !(en.workerId === workerId && en.isExtra));
+                    if (!schedule[key].length) delete schedule[key];
+                }
+            }
+        }
+
+        // Get workers in the extra hours of a shift
+        function getExtraWorkers(dayIdx, extraStartH, extraEndH) {
+            const seen = new Map();
+            for (let h = extraStartH; h < extraEndH; h++) {
+                const hh = h >= 24 ? h - 24 : h;
+                const key = dayIdx + '-' + hh;
+                const entries = schedule[key] || [];
+                entries.forEach(en => {
+                    if (en.isExtra && !seen.has(en.workerId)) {
+                        seen.set(en.workerId, en);
+                    }
+                });
+            }
+            return Array.from(seen.values());
         }
 
         // Copy all schedule entries for a day
@@ -1785,7 +1994,7 @@
                 const key = dayIdx + '-' + h;
                 const entries = schedule[key] || [];
                 entries.forEach(en => {
-                    copiedDay.push({ hour: h, workerId: en.workerId, areaId: en.areaId });
+                    copiedDay.push({ hour: h, workerId: en.workerId, areaId: en.areaId, isExtra: en.isExtra || false });
                 });
             }
             toast('Día copiado (' + copiedDay.length + ' turnos)');
@@ -1796,11 +2005,13 @@
         function pasteDay(dayIdx) {
             if (!copiedDay || !copiedDay.length) { toast('Nada que pegar', true); return; }
             let count = 0;
-            copiedDay.forEach(({ hour, workerId, areaId }) => {
+            copiedDay.forEach(({ hour, workerId, areaId, isExtra }) => {
                 const key = dayIdx + '-' + hour;
                 if (!schedule[key]) schedule[key] = [];
-                if (!schedule[key].some(en => en.workerId === workerId)) {
-                    schedule[key].push({ workerId, areaId });
+                if (!schedule[key].some(en => en.workerId === workerId && (!!en.isExtra) === (!!isExtra))) {
+                    const entry = { workerId, areaId };
+                    if (isExtra) entry.isExtra = true;
+                    schedule[key].push(entry);
                     count++;
                 }
             });
@@ -1884,12 +2095,15 @@
                         if (!w) return '';
                         const area = areas.find(aa => aa.id === en.areaId);
                         const aName = area ? area.name : '';
+                        const isExtra = en.isExtra ? true : false;
+                        const extraCls = isExtra ? ' is-extra' : '';
                         const areaOpts = areas.map(aa =>
                             `<option value="${aa.id}" ${aa.id === en.areaId ? 'selected' : ''}>${esc(aa.name)}</option>`
                         ).join('');
-                        return `<div class="cell-entry" style="background:${hexAlpha(w.color, .14)};color:${w.color}">
+                        return `<div class="cell-entry${extraCls}" style="background:${hexAlpha(w.color, isExtra ? .08 : .14)};color:${w.color}">
           <span class="ce-dot" style="background:${w.color}"></span>
           <span class="ce-name">${esc(w.name)}</span>
+          ${isExtra ? '<span class="ce-extra-tag">Otra Área</span>' : ''}
           ${aName ? `<span class="ce-area-tag">${esc(aName)}</span>` : ''}
           <span class="ce-remove" data-key="${key}" data-wid="${w.id}" title="Quitar">✕</span>
           ${areas.length ? `<select class="ce-select" data-key="${key}" data-wid="${w.id}" title="Cambiar área">${areaOpts}</select>` : ''}
@@ -2062,17 +2276,17 @@
                 </div></div>`;
             });
 
-            // Shift rows
+            // Shift rows + Extra rows
             let totalAssigned = 0;
             SHIFTS.forEach((shift, si) => {
-                // Shift label
+                // === Main shift label ===
                 html += `<div class="sg-shift-label">
                     <span class="shift-icon">${shift.icon}</span>
                     <span class="shift-name">${shift.name}</span>
                     <span class="shift-hours">${shift.startH}:00 a ${shift.endH >= 24 ? (shift.endH - 24) : shift.endH}:00</span>
                 </div>`;
 
-                // Day cells
+                // === Main shift day cells ===
                 for (let di = 0; di < NUM_DAYS; di++) {
                     const shiftWorkers = getShiftWorkers(di, shift.startH, shift.endH);
                     totalAssigned += shiftWorkers.length;
@@ -2081,13 +2295,62 @@
                     if (gridDays[di].isWeekend) cls += ' weekend';
                     if (shiftWorkers.length > 0) cls += ' has-entries';
 
+                    const areaOpts = areas.map(aa =>
+                        `<option value="${aa.id}">${esc(aa.name)}</option>`
+                    ).join('');
+
                     let pillsHTML = shiftWorkers.map(en => {
                         const w = workers.find(ww => ww.id === en.workerId);
                         if (!w) return '';
+                        const selOpts = areas.map(aa =>
+                            `<option value="${aa.id}" ${aa.id === en.areaId ? 'selected' : ''}>${esc(aa.name)}</option>`
+                        ).join('');
+                        const area = areas.find(aa => aa.id === en.areaId);
+                        const areaTag = area ? `<span class="ce-area-tag">${esc(area.name)}</span>` : '';
                         return `<div class="shift-pill" style="background:${hexAlpha(w.color, .15)};color:${w.color}">
                             <span class="sp-dot" style="background:${w.color}"></span>
                             ${esc(w.name)}
+                            ${areaTag}
+                            ${areas.length ? `<select class="sp-area-select" data-di="${di}" data-si="${si}" data-wid="${w.id}" title="Cambiar área">${selOpts}</select>` : ''}
                             <span class="sp-remove" data-di="${di}" data-si="${si}" data-wid="${w.id}" title="Quitar">✕</span>
+                        </div>`;
+                    }).join('');
+
+                    html += `<div class="${cls}" data-di="${di}" data-si="${si}">${pillsHTML}</div>`;
+                }
+
+                // === "Otra Área" hours label ===
+                const extraStartDisp = shift.extraStartH >= 24 ? (shift.extraStartH - 24) : shift.extraStartH;
+                const extraEndDisp = shift.extraEndH >= 24 ? (shift.extraEndH - 24) : shift.extraEndH;
+                html += `<div class="sg-extra-label">
+                    <span class="extra-icon">🔄</span>
+                    <span class="extra-name">Otra Área</span>
+                    <span class="extra-hours">${extraStartDisp}:00 a ${extraEndDisp}:00</span>
+                </div>`;
+
+                // === Extra hours day cells ===
+                for (let di = 0; di < NUM_DAYS; di++) {
+                    const extraWorkers = getExtraWorkers(di, shift.extraStartH, shift.extraEndH);
+                    totalAssigned += extraWorkers.length;
+
+                    let cls = 'sg-extra-cell';
+                    if (gridDays[di].isWeekend) cls += ' weekend';
+                    if (extraWorkers.length > 0) cls += ' has-entries';
+
+                    let pillsHTML = extraWorkers.map(en => {
+                        const w = workers.find(ww => ww.id === en.workerId);
+                        if (!w) return '';
+                        const selOpts = areas.map(aa =>
+                            `<option value="${aa.id}" ${aa.id === en.areaId ? 'selected' : ''}>${esc(aa.name)}</option>`
+                        ).join('');
+                        const area = areas.find(aa => aa.id === en.areaId);
+                        const areaTag = area ? `<span class="ce-area-tag" style="font-size:7px">${esc(area.name)}</span>` : '';
+                        return `<div class="extra-pill" style="background:${hexAlpha(w.color, .1)};color:${w.color}">
+                            <span class="ep-dot" style="background:${w.color}"></span>
+                            ${esc(w.name)}
+                            ${areaTag}
+                            ${areas.length ? `<select class="ep-area-select" data-di="${di}" data-si="${si}" data-wid="${w.id}" title="Cambiar otra área">${selOpts}</select>` : ''}
+                            <span class="ep-remove" data-di="${di}" data-si="${si}" data-wid="${w.id}" title="Quitar otra área">✕</span>
                         </div>`;
                     }).join('');
 
@@ -2097,7 +2360,7 @@
 
             grid.innerHTML = html;
             $('statAssigned').textContent = totalAssigned;
-            $('statCells').textContent = NUM_DAYS * SHIFTS.length;
+            $('statCells').textContent = NUM_DAYS * SHIFTS.length * 2; // main + extra
 
             // Attach shift events
             attachShiftEvents(grid);
@@ -2118,7 +2381,7 @@
                 });
             });
 
-            // Drop on shift cells
+            // Drop on main shift cells → assigns main shift + auto-assigns extra hours
             grid.querySelectorAll('.sg-shift-cell').forEach(cell => {
                 cell.addEventListener('dragover', e => {
                     e.preventDefault();
@@ -2137,14 +2400,43 @@
                     const si = parseInt(cell.dataset.si);
                     const shift = SHIFTS[si];
                     const defArea = areas.length ? areas[0].id : '';
+                    // Assign main shift
                     assignShift(di, shift.startH, shift.endH, wid, defArea);
+                    // Auto-assign extra hours (with same default area, user can change)
+                    assignExtra(di, shift.extraStartH, shift.extraEndH, wid, defArea);
                     rebuildGrid();
                     saveState();
-                    toast(workers.find(w => w.id === wid)?.name + ' → ' + shift.name);
+                    toast(workers.find(w => w.id === wid)?.name + ' → ' + shift.name + ' + Otra Área');
                 });
             });
 
-            // Remove buttons on shift pills
+            // Drop on extra cells → assigns only extra hours
+            grid.querySelectorAll('.sg-extra-cell').forEach(cell => {
+                cell.addEventListener('dragover', e => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    cell.classList.add('drag-over');
+                });
+                cell.addEventListener('dragleave', () => {
+                    cell.classList.remove('drag-over');
+                });
+                cell.addEventListener('drop', e => {
+                    e.preventDefault();
+                    cell.classList.remove('drag-over');
+                    const wid = e.dataTransfer.getData('text/plain') || dragWorkerId;
+                    if (!wid) return;
+                    const di = parseInt(cell.dataset.di);
+                    const si = parseInt(cell.dataset.si);
+                    const shift = SHIFTS[si];
+                    const defArea = areas.length ? areas[0].id : '';
+                    assignExtra(di, shift.extraStartH, shift.extraEndH, wid, defArea);
+                    rebuildGrid();
+                    saveState();
+                    toast(workers.find(w => w.id === wid)?.name + ' → Otra Área ' + shift.name);
+                });
+            });
+
+            // Remove buttons on main shift pills
             grid.querySelectorAll('.sp-remove').forEach(btn => {
                 btn.addEventListener('click', e => {
                     e.stopPropagation();
@@ -2153,6 +2445,68 @@
                     const wid = btn.dataset.wid;
                     const shift = SHIFTS[si];
                     removeShift(di, shift.startH, shift.endH, wid);
+                    // Also remove extra hours when removing from main shift
+                    removeExtra(di, shift.extraStartH, shift.extraEndH, wid);
+                    rebuildGrid();
+                    saveState();
+                });
+            });
+
+            // Remove buttons on extra pills
+            grid.querySelectorAll('.ep-remove').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const di = parseInt(btn.dataset.di);
+                    const si = parseInt(btn.dataset.si);
+                    const wid = btn.dataset.wid;
+                    const shift = SHIFTS[si];
+                    removeExtra(di, shift.extraStartH, shift.extraEndH, wid);
+                    rebuildGrid();
+                    saveState();
+                });
+            });
+
+            // Area selector on main shift pills
+            grid.querySelectorAll('.sp-area-select').forEach(sel => {
+                sel.addEventListener('change', e => {
+                    e.stopPropagation();
+                    const di = parseInt(sel.dataset.di);
+                    const si = parseInt(sel.dataset.si);
+                    const wid = sel.dataset.wid;
+                    const shift = SHIFTS[si];
+                    const newAreaId = sel.value;
+                    // Update area for all main shift hours
+                    for (let h = shift.startH; h < shift.endH; h++) {
+                        const hh = h >= 24 ? h - 24 : h;
+                        const key = di + '-' + hh;
+                        if (schedule[key]) {
+                            const entry = schedule[key].find(en => en.workerId === wid && !en.isExtra);
+                            if (entry) entry.areaId = newAreaId;
+                        }
+                    }
+                    rebuildGrid();
+                    saveState();
+                });
+            });
+
+            // Area selector on extra pills
+            grid.querySelectorAll('.ep-area-select').forEach(sel => {
+                sel.addEventListener('change', e => {
+                    e.stopPropagation();
+                    const di = parseInt(sel.dataset.di);
+                    const si = parseInt(sel.dataset.si);
+                    const wid = sel.dataset.wid;
+                    const shift = SHIFTS[si];
+                    const newAreaId = sel.value;
+                    // Update area for all extra hours
+                    for (let h = shift.extraStartH; h < shift.extraEndH; h++) {
+                        const hh = h >= 24 ? h - 24 : h;
+                        const key = di + '-' + hh;
+                        if (schedule[key]) {
+                            const entry = schedule[key].find(en => en.workerId === wid && en.isExtra);
+                            if (entry) entry.areaId = newAreaId;
+                        }
+                    }
                     rebuildGrid();
                     saveState();
                 });
@@ -2558,7 +2912,7 @@
             const shiftColors = [[251, 191, 36], [251, 146, 60], [129, 140, 248]];
 
             SHIFTS.forEach((shift, si) => {
-                // Shift label
+                // === Main shift label ===
                 pdf.setFillColor(...cSurf2);
                 pdf.rect(M, y, shiftLabelW, shiftRowH, 'F');
                 pdf.setDrawColor(...cBrd);
@@ -2574,7 +2928,7 @@
                 const endDisp = shift.endH >= 24 ? (shift.endH - 24) + ':00' : shift.endH + ':00';
                 pdf.text(shift.startH + ':00 a ' + endDisp, M + shiftLabelW / 2, y + shiftRowH / 2 + 1, { align: 'center' });
 
-                // Day cells
+                // Main shift day cells
                 for (let di = 0; di < NUM_DAYS; di++) {
                     const cx = M + shiftLabelW + di * colW;
                     pdf.setDrawColor(...cBrd);
@@ -2587,19 +2941,81 @@
                     shiftWorkers.forEach(en => {
                         const w = workers.find(ww => ww.id === en.workerId);
                         if (!w) return;
+                        const area = areas.find(aa => aa.id === en.areaId);
                         const rgb = hexToRgb(w.color);
-                        // Colored pill
                         pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
                         pdf.roundedRect(cx + 2, ey, colW - 4, 5, 1.2, 1.2, 'F');
                         pdf.setTextColor(255, 255, 255);
                         pdf.setFontSize(6.5);
                         pdf.setFont('helvetica', 'bold');
-                        pdf.text(w.name, cx + colW / 2, ey + 3.5, { align: 'center' });
+                        let label = w.name;
+                        if (area) label += ' — ' + area.name;
+                        const maxLen = Math.floor((colW - 5) / 1.7);
+                        if (label.length > maxLen) label = label.substring(0, maxLen - 1) + '…';
+                        pdf.text(label, cx + colW / 2, ey + 3.5, { align: 'center' });
                         ey += 6;
                     });
                 }
 
                 y += shiftRowH;
+
+                // === Extra hours row ===
+                const extraRowH = 18;
+                const extraStartDisp = shift.extraStartH >= 24 ? (shift.extraStartH - 24) : shift.extraStartH;
+                const extraEndDisp = shift.extraEndH >= 24 ? (shift.extraEndH - 24) : shift.extraEndH;
+
+                // Extra label
+                pdf.setFillColor(15, 20, 30);
+                pdf.rect(M, y, shiftLabelW, extraRowH, 'F');
+                pdf.setDrawColor(...cBrd);
+                pdf.rect(M, y, shiftLabelW, extraRowH);
+                // Dashed top border
+                pdf.setDrawColor(...cAcc);
+                pdf.setLineWidth(0.3);
+                pdf.setLineDashPattern([2, 2], 0);
+                pdf.line(M, y, W - M, y);
+                pdf.setLineDashPattern([], 0);
+                pdf.setLineWidth(0.15);
+
+                pdf.setTextColor(...cDim);
+                pdf.setFontSize(6);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('OTRA ÁREA', M + shiftLabelW / 2, y + extraRowH / 2 - 1, { align: 'center' });
+                pdf.setFontSize(5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text(extraStartDisp + ':00 a ' + extraEndDisp + ':00', M + shiftLabelW / 2, y + extraRowH / 2 + 2.5, { align: 'center' });
+
+                // Extra day cells
+                for (let di = 0; di < NUM_DAYS; di++) {
+                    const cx = M + shiftLabelW + di * colW;
+                    pdf.setDrawColor(...cBrd);
+                    pdf.setFillColor(12, 16, 25);
+                    pdf.rect(cx, y, colW, extraRowH, 'FD');
+
+                    const extraWorkers = getExtraWorkers(di, shift.extraStartH, shift.extraEndH);
+                    let ey = y + 2;
+
+                    extraWorkers.forEach(en => {
+                        const w = workers.find(ww => ww.id === en.workerId);
+                        if (!w) return;
+                        const area = areas.find(aa => aa.id === en.areaId);
+                        const rgb = hexToRgb(w.color);
+                        // Slightly transparent pill for extra
+                        pdf.setFillColor(Math.min(255, rgb[0] + 20), Math.min(255, rgb[1] + 20), Math.min(255, rgb[2] + 20));
+                        pdf.roundedRect(cx + 2, ey, colW - 4, 4.5, 1, 1, 'F');
+                        pdf.setTextColor(255, 255, 255);
+                        pdf.setFontSize(5.5);
+                        pdf.setFont('helvetica', 'bold');
+                        let label = w.name;
+                        if (area) label += ' — ' + area.name;
+                        const maxLen = Math.floor((colW - 5) / 1.5);
+                        if (label.length > maxLen) label = label.substring(0, maxLen - 1) + '…';
+                        pdf.text(label, cx + colW / 2, ey + 3.2, { align: 'center' });
+                        ey += 5;
+                    });
+                }
+
+                y += extraRowH;
             });
 
             // ========== FOOTER ==========
